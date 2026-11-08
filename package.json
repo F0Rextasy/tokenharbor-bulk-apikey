@@ -1,0 +1,39 @@
+{
+  "name": "tokenharbor-bulk-apikey",
+  "version": "1.0.0",
+  "description": "Bulk-create Token Harbor accounts and API keys — OpenAI-compatible free models (DeepSeek, MiMo) plus a 9Router / OmniRoute connector.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "tokenharbor-bulk-apikey": "src/cli.js",
+    "tokenharbor-bulk-apikey-launcher": "src/launcher.js"
+  },
+  "main": "src/cli.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/launcher.js",
+    "mint": "node src/cli.js --auto",
+    "9router": "node src/connect-9router.js",
+    "omniroute": "node src/connect-omniroute.js"
+  },
+  "keywords": [
+    "api-key",
+    "bulk",
+    "register",
+    "launcher",
+    "tokenharbor",
+    "deepseek",
+    "omniroute",
+    "9router"
+  ],
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "puppeteer-core": "^24.9.0"
+  }
+}
