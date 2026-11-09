@@ -596,6 +596,7 @@ async function verifyKeys(px, log) {
     }).catch((e) => ({ status: 0, text: e.message }));
     const ok = r.status === 200;
     if (ok) live++;
+    else fs.appendFileSync('keys-dead.txt', `${key} ${new Date().toISOString().slice(0, 10)} ${r.status}\n`);
     log(`${key.slice(0, 14)}… ${ok ? 'live' : `dead (${r.status}) ${String(r.text).slice(0, 70)}`}`);
   }
   log(`${live}/${keys.length} live`);

@@ -27,7 +27,7 @@ function launchBrowser({ px = null, headless = false } = {}) {
     .catch(() => puppeteer.launch(options))
     .catch((e) => {
       throw new Error(
-        `could not start Chrome (${e.message}). Install Chrome, or run: npx puppeteer browsers install chrome`
+        `Chrome not found (${e.message}). Install Chrome, or run: npx puppeteer browsers install chrome`
       );
     });
 }

@@ -142,7 +142,7 @@ async function connectFlow(cfg) {
   } catch (e) {
     if (!/no API keys/.test(e.message)) throw e;
     console.log(`  ! ${e.message}`);
-    const apiKey = await ask('Single Token Harbor key to register');
+    const apiKey = await ask('Single API key to register');
     if (apiKey) await connect9Router({ base: cfg.routerBase, password: cfg.routerPassword, apiKey });
   }
 }
@@ -158,7 +158,7 @@ async function connectFlowOmni(cfg) {
   } catch (e) {
     if (!/no API keys/.test(e.message)) throw e;
     console.log(`  ! ${e.message}`);
-    const apiKey = await ask('Single Token Harbor key to register');
+    const apiKey = await ask('Single API key to register');
     if (apiKey) await connectOmniRoute({ base: cfg.routerBase, password: cfg.routerPassword, apiKey });
   }
 }
