@@ -110,6 +110,22 @@ async function mintFlow(cfg) {
   // count and nothing else, so proxy/model stay at their settings values.
   cfg.count = parseInt(await ask('How many accounts/keys do you want (any number)', cfg.count), 10) || cfg.count;
   saveConfig(cfg);
+  // The panel refuses public disposable mail domains, so the only thing the CLI
+  // cannot create by itself is a mailbox it can read. Say it plainly and let the
+  // user keep it in mailtrap.txt (or MAILTRAP_TOKEN) — never ask for the value.
+  const tokenFile = path.join(ROOT, 'mailtrap.txt');
+  const haveToken = process.env.MAILTRAP_TOKEN || (fs.existsSync(tokenFile) && fs.readFileSync(tokenFile, 'utf8').trim().length > 20);
+  if (!haveToken) {
+    console.log('  ! no mailbox provider configured — tokenharbor.ai answers "human check" to public');
+    console.log('    disposable mail domains, so a readable mailbox is required.');
+    console.log(`    Free one-time setup: mailtrap.io → Settings → API Tokens, then put the value`);
+    console.log(`    in ${path.basename(tokenFile)} (one line) and run this menu again.`);
+    const go = await ask('Continue without it anyway? (y/N)', 'n');
+    if (!/^y/i.test(String(go))) {
+      console.log('  stopped — add the file and pick "Mint keys" again');
+      return;
+    }
+  }
   const proxyPath = path.resolve(ROOT, cfg.proxyFile);
   const havePool = fs.existsSync(proxyPath);
   if (!havePool) {

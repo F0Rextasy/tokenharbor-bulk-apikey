@@ -63,7 +63,7 @@ un chat-200 en direct.
 | Téléphone requis | **Non** |
 | Captcha | **Cloudflare Turnstile** à l'inscription — `src/solver.js` génère un vrai jeton dans un Chrome hors écran via la même sortie |
 | Vérification e-mail | **requise** — la CLI ouvre le lien et suit la redirection `307` vers `?verify=success` |
-| L'unité qui s'adapte | **un compte = une clé** → `--count N` signifie en réalité « N comptes depuis N réseaux » |
+| L'unité qui s'étend | **un compte = une clé** → `--count N` signifie en réalité « N comptes depuis N réseaux » |
 
 En-têtes à surveiller : `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
 `x-th-upstream-model`, `x-th-route-decision`.
@@ -116,15 +116,16 @@ dans `keys.txt`.
 git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
 cd tokenharbor-bulk-apikey
 npm install
-echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # jeton API Mailtrap gratuit, une ligne
-npm start
+npm start            # le menu demande une fois un jeton API Mailtrap gratuit, puis s'en souvient
 ```
 
-**Le jeton Mailtrap est la seule étape de configuration.** Token Harbor accepte un domaine de messagerie qui ressemble
-à un véritable hôte de courrier entrant et répond « complete the human check » aux domaines jetables publics
-(pour ceux-ci, il n'affiche même pas le widget), donc la CLI a besoin d'une boîte aux lettres qu'elle peut
-lire. L'offre gratuite suffit : créez un compte sur [mailtrap.io](https://mailtrap.io) → **Settings
-→ API Tokens** → collez le jeton dans `mailtrap.txt` (ou exportez `MAILTRAP_TOKEN`).
+**Le jeton Mailtrap est la seule étape de configuration, et le lanceur le demande une seule fois.** Token Harbor
+accepte un domaine de messagerie qui ressemble à un véritable hôte de courrier entrant et répond « complete the human
+check » aux domaines jetables publics (pour ceux-ci, il n'affiche même pas le widget), donc la CLI
+a besoin d'une boîte aux lettres qu'elle peut lire. L'offre gratuite suffit : créez un compte sur
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, puis collez le jeton à l'invite du menu
+— il est stocké dans `mailtrap.txt` et n'est plus jamais demandé (ou exportez `MAILTRAP_TOKEN`, ou
+écrivez le fichier vous-même).
 
 Sans le jeton, la CLI fonctionne quand même, se rabat sur des services de messagerie publics et vous indique
 clairement quand le panneau refuse cette adresse.
@@ -163,7 +164,8 @@ limite de débit) atterrit dans `keys-unverified.txt` afin que le compte ne soit
    mesuré depuis la sortie, pas depuis votre machine.
 3. **Vérification humaine** — lorsque le panneau affiche le widget, l'inscription est rejouée dans un vrai Chrome
    (`src/solver.js`, `puppeteer-core` + le Chrome déjà installé ; `--enable-automation` est
-   volontairement supprimé), la case est cochée à la souris, et les cookies de session de ce navigateur sont renvoyés à la CLI.
+   volontairement supprimé), la case est cochée à la souris, et les cookies de session de ce navigateur sont transmis
+   à la CLI.
 4. **Vérification e-mail** — le lien de la boîte aux lettres est ouvert ; le jeton est consommé
    côté serveur et répond `307 → /dashboard?verify=success`.
 5. **Consentement aux modèles gratuits** — `POST /api/me/privacy` avec le texte de consentement affiché par le tableau de bord
@@ -187,7 +189,7 @@ node src/cli.js --help
 | `--count <n>` | comptes (et clés) à créer, 1 par défaut |
 | `--pool <file>` | liste de proxys, une sortie par ligne (`http://host:port`, `socks5://user:pass@host:port`, `host:port`) ; les commentaires `#` en ligne sont acceptés |
 | `--headless` | exécute le navigateur de secours en mode headless (par défaut : fenêtre hors écran, ce qu'attend le captcha) |
-| `--screen` | teste le pool contre le panneau et affiche en direct/mort par sortie |
+| `--screen` | teste le pool contre le panneau et affiche vivant/mort par sortie |
 | `--verify` | vérifie en direct `keys.txt` ; les clés mortes sont écrites dans `keys-dead.txt` |
 | `--models` | affiche les identifiants des modèles gratuits |
 
@@ -196,7 +198,7 @@ et un `429` attend le temps indiqué par le panneau.
 
 ## 🛰️ Derrière un proxy
 
-La CLI s'exécute **en direct** par défaut. Placez une sortie par ligne dans `proxies.txt` (le lanceur la prend
+La CLI fonctionne **en direct** par défaut. Placez une sortie par ligne dans `proxies.txt` (le lanceur la prend
 automatiquement en compte) ou passez `--pool` :
 
 ```text
@@ -214,7 +216,7 @@ fournisseur de messagerie n'est pas le panneau), donc une sortie lente ne peut p
 | Chemin | Quoi |
 | --- | --- |
 | `keys.txt` | clés vérifiées, une par ligne (écrites uniquement après le test en direct) |
-| `keys-dead.txt` | clés qui ont cessé de répondre (depuis `--verify`) |
+| `keys-dead.txt` | clés qui ont cessé de répondre (via `--verify`) |
 | `keys-unverified.txt` | clés dont le test en direct n'a pas pu aboutir — le compte existe, la clé est réelle |
 | `accounts.jsonl` | une ligne par compte : e-mail + résultats des étapes |
 | `mailtrap.txt` | votre jeton API Mailtrap (une ligne) |
@@ -257,8 +259,8 @@ Même forme pour OmniRoute (nœud fournisseur + une connexion par clé). Le lanc
 ## 🐞 Problèmes
 
 Ouvrez un ticket avec la commande, l'étape qui a échoué (la CLI affiche `precheck / signup /
-verify / consent / key / chat`) et le message du panneau lui-même. Ne collez jamais une clé API complète — les
-quatre derniers caractères suffisent.
+verify / consent / key / chat`) et le message du panneau lui-même. Ne collez jamais une clé API complète —
+les quatre derniers caractères suffisent.
 
 ## 📄 Licence
 

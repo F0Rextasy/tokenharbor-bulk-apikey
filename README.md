@@ -116,15 +116,16 @@ to `keys.txt`.
 git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
 cd tokenharbor-bulk-apikey
 npm install
-echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # free Mailtrap API token, one line
-npm start
+npm start            # the menu asks for a free Mailtrap API token once, then remembers it
 ```
 
-**The Mailtrap token is the only setup step.** Token Harbor accepts a mail domain that looks
-like a real inbound-mail host and answers "complete the human check" to public disposable
-domains (for those it does not even render the widget), so the CLI needs a mailbox it can
-read. Free tier is enough: create an account at [mailtrap.io](https://mailtrap.io) → **Settings
-→ API Tokens** → paste the token into `mailtrap.txt` (or export `MAILTRAP_TOKEN`).
+**The Mailtrap token is the only setup step, and the launcher asks for it once.** Token Harbor
+accepts a mail domain that looks like a real inbound-mail host and answers "complete the human
+check" to public disposable domains (for those it does not even render the widget), so the CLI
+needs a mailbox it can read. Free tier is enough: create an account at
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, then paste the token at the menu
+prompt — it is stored in `mailtrap.txt` and never asked again (or export `MAILTRAP_TOKEN`, or
+write the file yourself).
 
 Without the token the CLI still runs, falls back to public mail services, and tells you
 plainly when the panel refuses that address.
