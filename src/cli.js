@@ -504,6 +504,8 @@ async function mintOne({ px, pool, index, total, log }) {
   // The key exists from here on, so *any* failure inside the gate keeps it in
   // keys-unverified.txt instead of throwing the account away.
   const answers = [];
+  const gateStart = Date.now();
+  const GATE_BUDGET_MS = 480000; // a dead pool must not hang one account forever
   const keepKey = () => {
     try {
       fs.appendFileSync('keys-unverified.txt', `${key} ${mail.address}\n`);
@@ -517,13 +519,14 @@ async function mintOne({ px, pool, index, total, log }) {
       for (const model of [FREE_MODEL, FREE_FALLBACK]) {
         let c = null;
         for (let t = 0; t < 6 && !c; t++) {
+          if (Date.now() - gateStart > GATE_BUDGET_MS) throw new Error('live gate budget exhausted');
           try {
             c = await req(`${BASE}/v1/chat/completions`, {
               px: STRICT ? (pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null) : t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
               method: 'POST',
               headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
               body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
-              timeoutMs: 120000,
+              timeoutMs: 60000,
             });
           } catch (e) {
             if (t === 5) throw e;
