@@ -34,17 +34,17 @@
 
 ## ✨ Por que isto existe
 
-O Token Harbor é um painel Next.js (autenticação Supabase) cujo plano gratuito é **baseado em porcentagem**: uma
+O Token Harbor é um painel Next.js (autenticação via Supabase) cujo plano gratuito é **baseado em porcentagem**: uma
 **janela pessoal de 7 dias** começa com sua primeira requisição gratuita e consome uma fração do
-preço de tabela, não uma contagem fixa de requisições. O cadastro é e-mail + senha com um **widget Cloudflare
-Turnstile** e um limite por rede — uma rede significa uma conta — então uma execução em massa é
-na verdade "uma saída nova por conta".
+preço de tabela, não uma contagem fixa de requisições. O cadastro é e-mail + senha com um **widget
+Cloudflare Turnstile** e um limite por rede — uma rede significa uma conta — então uma execução em massa é,
+na prática, "uma saída nova por conta".
 
-Dois portões ficam depois do cadastro e ambos são fáceis de esquecer: a API responde
+Dois portões ficam após o cadastro e ambos são fáceis de passar despercebidos: a API responde
 `403 email_verification_required` até que o link do e-mail de cadastro seja aberto, e toda
 rota `:free` responde `403 free_models_disabled` até que o consentimento de modelos gratuitos seja ativado —
-e esse endpoint de consentimento **valida o texto que o cliente exibiu** (`shown_text`), então um simples
-`{"free_models_enabled":true}` responde `400 reload_and_retry`. Esta CLI faz tudo isso,
+e esse endpoint de consentimento **valida o texto que o cliente exibiu** (`shown_text`), então um
+`{"free_models_enabled":true}` puro responde `400 reload_and_retry`. Esta CLI faz tudo isso,
 lê os ids de ação do Next.js da página ao vivo em cada execução, e só grava chaves que passam
 em um chat-200 ao vivo.
 
@@ -53,7 +53,7 @@ em um chat-200 ao vivo.
 | O quê | Valor |
 | --- | --- |
 | Modelos gratuitos | **4** — DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash (sufixo `:free`) |
-| Franquia | **porcentagem do preço de tabela**, sem contagem fixa de requisições (medido: ainda `0%` após ~25 chamadas) |
+| Cota | **porcentagem do preço de tabela**, sem contagem fixa de requisições (medido: ainda `0%` após ~25 chamadas) |
 | Janela | **7 dias pessoais**, começa com sua primeira requisição gratuita (cabeçalho `x-th-free-resets`) |
 | Limite de taxa da conta | **60 req/min**, **1.800 req/h** |
 | Limite de taxa por IP | **100 req/min**, **3.000 req/h** (acima da taxa responde `429` com o tempo de espera) |
@@ -61,9 +61,9 @@ em um chat-200 ao vivo.
 | Modelos pagos | 70+ (Claude, Grok, GLM, MiMo Pro …) — precisam de créditos; uma conta com saldo zero responde `402` |
 | Cartão obrigatório | **Não** |
 | Telefone obrigatório | **Não** |
-| Captcha | **Cloudflare Turnstile** no cadastro — `src/solver.js` gera um token real em um Chrome offscreen pela mesma saída |
-| Verificação de e-mail | **obrigatória** — a CLI abre o link e segue o `307` para `?verify=success` |
-| A unidade que escala | **uma conta = uma chave** → `--count N` é na verdade "N contas de N redes" |
+| Captcha | **Cloudflare Turnstile** no cadastro — `src/solver.js` gera um token real em um Chrome fora da tela pela mesma saída |
+| Verificação de e-mail | **obrigatória** — a CLI abre o link e segue o `307` até `?verify=success` |
+| A unidade que escala | **uma conta = uma chave** → `--count N` é, na prática, "N contas de N redes" |
 
 Cabeçalhos que vale registrar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
 `x-th-upstream-model`, `x-th-route-decision`.
@@ -79,7 +79,7 @@ Cabeçalhos que vale registrar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-re
 
 O endpoint serve **78 ids de modelo** no total (`GET /v1/models` com qualquer chave válida); os quatro
 acima são os que funcionam sem créditos. Ferramentas/chamada de função funcionam nas rotas gratuitas:
-um schema `get_time` retorna como um array `tool_calls` real.
+um schema `get_time` volta como um array `tool_calls` real.
 
 ## 🧪 Como usar a API
 
@@ -103,7 +103,7 @@ print(client.chat.completions.create(
 ## 🚀 Um comando
 
 ```bash
-npm start            # menu → "Mint keys" → quantas → pronto
+npm start            # menu → "Mint keys" → how many → done
 ```
 
 `npm start` abre o launcher, **1) Mint keys** pergunta uma quantidade e nada mais, então a CLI
@@ -116,19 +116,24 @@ em `keys.txt`.
 git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
 cd tokenharbor-bulk-apikey
 npm install
-npm start            # o menu pede um token de API gratuito do Mailtrap uma vez, depois lembra dele
+echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # REQUIRED — see the warning below
+npm start            # menu → 1) Mint keys → how many → done
 ```
 
-**O token do Mailtrap é o único passo de configuração, e o launcher o pede uma vez.** O Token Harbor
-aceita um domínio de e-mail que pareça um host real de e-mail de entrada e responde "complete o human
-check" para domínios descartáveis públicos (para esses ele nem renderiza o widget), então a CLI
-precisa de uma caixa de correio que consiga ler. O plano gratuito é suficiente: crie uma conta em
-[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, depois cole o token no prompt
-do menu — ele é armazenado em `mailtrap.txt` e nunca mais é pedido (ou exporte `MAILTRAP_TOKEN`, ou
-escreva o arquivo você mesmo).
+> **Sem `mailtrap.txt` a criação não funciona de jeito nenhum.** O Token Harbor recusa todo domínio de
+> caixa de correio público, então nada consegue ler o link de verificação e toda conta travaria em
+> `403 email_verification_required`. Não há fallback: obtenha um token gratuito primeiro.
 
-Sem o token a CLI ainda funciona, recorre a serviços de e-mail públicos, e avisa
-claramente quando o painel recusa esse endereço.
+**O token do Mailtrap é o único passo de configuração.** O Token Harbor
+aceita um domínio de e-mail que pareça um host real de e-mail de entrada e responde "complete the human
+check" para domínios descartáveis públicos (para esses ele nem renderiza o widget), então a CLI
+precisa de uma caixa de correio que consiga ler. O plano gratuito basta: crie uma conta em
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, então grave esse valor em
+`mailtrap.txt` ao lado de `package.json` (uma linha), ou exporte `MAILTRAP_TOKEN`. O launcher
+verifica isso e avisa se estiver faltando — ele nunca pede o valor em si.
+
+Sem o token a CLI ainda tenta os trilhos de e-mail públicos primeiro, e toda conta para na
+barreira de verificação humana do painel — é por isso que o arquivo é obrigatório, não opcional.
 
 ## ✅ Verificado funcionando — toda chave é testada
 
@@ -151,20 +156,21 @@ done
 ```
 
 Re-verifique a qualquer momento com `npm start` → **2) Verify keys** (`node src/cli.js --verify`); chaves
-mortas vão para `keys-dead.txt`, uma chave cujo portão ao vivo não pôde ser concluído (por exemplo, a rede atingiu um
+mortas vão para `keys-dead.txt`, uma chave cujo portão ao vivo não pôde ser concluído (ex.: a rede atingiu um
 limite de taxa) vai para `keys-unverified.txt` para que a conta nunca seja perdida.
 
 ## 🧭 Como funciona
 
 1. **Caixa de correio** — uma caixa de entrada nova por conta na sua conta Mailtrap (`mailtrap.txt`); mail.tm / mail.gw
    públicos são os trilhos de fallback.
-2. **Cadastro** — os ids de server-action do Next.js (`next-action`, `$ACTION_KEY`,
+2. **Cadastro** — os ids de ação do servidor Next.js (`next-action`, `$ACTION_KEY`,
    `x-deployment-id`) são lidos da página ao vivo em cada execução, então um redeploy do painel não quebra
    a CLI; a impressão digital do dispositivo e o fuso horário viajam com a requisição, e o fuso horário é
    medido a partir da saída, não da sua máquina.
 3. **Verificação humana** — quando o painel renderiza o widget, o cadastro é reproduzido em um Chrome real
    (`src/solver.js`, `puppeteer-core` + o Chrome já instalado; `--enable-automation` é
-   suprimido de propósito), a caixa de seleção é clicada com o mouse, e os cookies de sessão desse navegador são devolvidos à CLI.
+   suprimido de propósito), a caixa de seleção é clicada com o mouse, e os cookies de sessão desse navegador
+   são repassados para a CLI.
 4. **Verificação de e-mail** — o link da caixa de correio é aberto; o token é consumido
    no servidor e responde `307 → /dashboard?verify=success`.
 5. **Consentimento de modelos gratuitos** — `POST /api/me/privacy` com o texto de consentimento que o painel exibe
@@ -175,11 +181,11 @@ limite de taxa) vai para `keys-unverified.txt` para que a conta nunca seja perdi
 ## ⚙️ Opções da CLI
 
 ```bash
-node src/cli.js --auto --count 5             # cinco contas → cinco chaves
+node src/cli.js --auto --count 5             # five accounts → five keys
 node src/cli.js --auto --count 5 --pool proxies.txt
-node src/cli.js --verify                     # verifica ao vivo keys.txt, mortas → keys-dead.txt
-node src/cli.js --screen --pool proxies.txt  # quais saídas alcançam o painel
-node src/cli.js --models                     # a lista de modelos gratuitos (precisa de uma chave)
+node src/cli.js --verify                     # live-check keys.txt, dead ones → keys-dead.txt
+node src/cli.js --screen --pool proxies.txt  # which exits reach the panel at all
+node src/cli.js --models                     # the free model list (needs a key)
 node src/cli.js --help
 ```
 
@@ -187,10 +193,11 @@ node src/cli.js --help
 | --- | --- |
 | `--count <n>` | contas (e chaves) a criar, padrão 1 |
 | `--pool <file>` | lista de proxies, uma saída por linha (`http://host:port`, `socks5://user:pass@host:port`, `host:port`); comentários inline com `#` são permitidos |
-| `--headless` | executa o navegador de fallback em modo headless (padrão: janela fora da tela, que é o que o captcha espera) |
-| `--screen` | testa o pool contra o painel e imprime vivo/morto por saída |
-| `--verify` | verifica ao vivo `keys.txt`; chaves mortas são gravadas em `keys-dead.txt` |
-| `--models` | imprime os ids dos modelos gratuitos |
+| `--headless` | executar o navegador de fallback sem interface (padrão: janela fora da tela, que é o que o captcha espera) |
+| `--screen` | testar o pool contra o painel e imprimir vivo/morto por saída |
+| `--verify` | verificar ao vivo `keys.txt`; chaves mortas são gravadas em `keys-dead.txt` |
+| `--models` | imprimir os ids dos modelos gratuitos |
+| `--strict-proxy` | nunca enviar uma requisição direta: o portão ao vivo também deve passar pelo pool (env `TOKENHARBOR_STRICT=1` faz o mesmo) |
 
 Uma saída que morre nunca custa uma conta: o cadastro e o portão ao vivo ambos tentam novamente em outras linhas do pool,
 e um `429` espera o tempo que o painel indica.
@@ -198,7 +205,7 @@ e um `429` espera o tempo que o painel indica.
 ## 🛰️ Atrás de um proxy
 
 A CLI roda **direto** por padrão. Coloque uma saída por linha em `proxies.txt` (o launcher a
-detecta automaticamente) ou passe `--pool`:
+pega automaticamente) ou passe `--pool`:
 
 ```text
 http://127.0.0.1:8080
@@ -222,7 +229,7 @@ provedor de e-mail não é o painel), então uma saída lenta não pode quebrar 
 | `proxies.txt` | lista de proxies opcional |
 | `src/cli.js` | a CLI de criação / verificação / triagem |
 | `src/launcher.js` | o menu (`npm start`) |
-| `src/solver.js` | a parte do navegador para o widget Turnstile |
+| `src/solver.js` | a metade do navegador para o widget Turnstile |
 | `src/consent-text.txt` | o texto de consentimento que o painel valida |
 | `src/connect-9router.js`, `src/connect-omniroute.js` | conectores de roteador |
 
@@ -249,7 +256,7 @@ itens de menu **6** e **7**, e `npm run 9router` / `npm run omniroute` fazem o m
 ## 🔑 O que uma chave te dá
 
 - os quatro modelos `:free` acima, a 60 req/min e 1.800 req/h por conta (100 req/min por IP);
-- uma franquia baseada em porcentagem dentro de uma janela pessoal de 7 dias (`x-th-free-resets` informa quando
+- uma cota baseada em porcentagem dentro de uma janela pessoal de 7 dias (`x-th-free-resets` te diz quando
   ela reinicia);
 - `/v1/chat/completions` compatível com OpenAI com chamada de ferramentas, então qualquer SDK, CLI ou roteador OpenAI
   funciona mudando `base_url` para `https://tokenharbor.ai/v1`;
@@ -259,7 +266,7 @@ itens de menu **6** e **7**, e `npm run 9router` / `npm run omniroute` fazem o m
 
 Abra uma issue com o comando, a etapa que falhou (a CLI imprime `precheck / signup /
 verify / consent / key / chat`) e a mensagem do próprio painel. Nunca cole uma chave de API completa — os
-últimos quatro caracteres são suficientes.
+últimos quatro caracteres bastam.
 
 ## 📄 Licença
 

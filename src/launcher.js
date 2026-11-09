@@ -24,6 +24,7 @@ const CLI = path.join(__dirname, 'cli.js');
 
 const defaults = {
   count: 50,
+  strictProxy: false,
   proxyFile: process.env['TOKENHARBOR_PROXIES'] || 'proxies.txt',
   model: "deepseek-v4.1-flash:free",
   routerBase: 'http://localhost:20128',
@@ -132,7 +133,7 @@ async function mintFlow(cfg) {
     console.log(`  ! ${cfg.proxyFile} not found — running WITHOUT a proxy (direct)`);
     console.log('    (put one exit per line there to route through proxies: http://host:port, socks5://host:port or host:port)');
   }
-  run(['--auto', '--count', String(cfg.count), ...(havePool ? ['--pool', cfg.proxyFile] : [])]);
+  run(['--auto', '--count', String(cfg.count), ...(cfg.strictProxy ? ['--strict-proxy'] : []), ...(havePool ? ['--pool', cfg.proxyFile] : [])]);
 }
 
 async function verifyFlow(cfg) {

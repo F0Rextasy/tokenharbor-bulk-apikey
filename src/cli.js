@@ -31,6 +31,8 @@ const BASE = 'https://tokenharbor.ai';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36';
 const OUT = path.join(process.cwd(), 'keys.txt');
+// Strict mode: never fall back to a direct request (100% proxy runs).
+const STRICT = process.argv.includes('--strict-proxy');
 const CONSENT_TEXT = path.join(__dirname, 'consent-text.txt');
 const FREE_MODEL = 'deepseek-v4.1-flash:free';
 const FREE_FALLBACK = 'deepseek-v4-flash:free';
@@ -517,7 +519,7 @@ async function mintOne({ px, pool, index, total, log }) {
         for (let t = 0; t < 6 && !c; t++) {
           try {
             c = await req(`${BASE}/v1/chat/completions`, {
-              px: t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
+              px: STRICT ? (pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null) : t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
               method: 'POST',
               headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
               body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
@@ -613,6 +615,7 @@ async function verifyKeys(px, log) {
   const log = (...a) => console.log(...a);
   if (arg('help', false)) return printHelp();
   const px = pool();
+  if (STRICT && !px) throw new Error('--strict-proxy needs a proxy pool (--pool <file> or proxies.txt)');
   const one = () => px && px[Math.floor(Math.random() * px.length)];
   if (arg('models', false)) {
     const r = await req(`${BASE}/v1/models`, { px: one() || null });

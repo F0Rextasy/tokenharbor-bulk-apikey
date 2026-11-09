@@ -116,19 +116,24 @@ to `keys.txt`.
 git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
 cd tokenharbor-bulk-apikey
 npm install
-npm start            # the menu asks for a free Mailtrap API token once, then remembers it
+echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # REQUIRED — see the warning below
+npm start            # menu → 1) Mint keys → how many → done
 ```
 
-**The Mailtrap token is the only setup step, and the launcher asks for it once.** Token Harbor
+> **Without `mailtrap.txt` the mint cannot work at all.** Token Harbor refuses every public
+> mailbox domain, so nothing can read the verification link and every account would stall at
+> `403 email_verification_required`. There is no fallback: get a free token first.
+
+**The Mailtrap token is the only setup step.** Token Harbor
 accepts a mail domain that looks like a real inbound-mail host and answers "complete the human
 check" to public disposable domains (for those it does not even render the widget), so the CLI
 needs a mailbox it can read. Free tier is enough: create an account at
-[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, then paste the token at the menu
-prompt — it is stored in `mailtrap.txt` and never asked again (or export `MAILTRAP_TOKEN`, or
-write the file yourself).
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, then write that value into
+`mailtrap.txt` next to `package.json` (one line), or export `MAILTRAP_TOKEN`. The launcher
+checks it and tells you if it is missing — it never asks for the value itself.
 
-Without the token the CLI still runs, falls back to public mail services, and tells you
-plainly when the panel refuses that address.
+Without the token the CLI still tries the public mail rails first, and every account stops at
+the panel's human-check wall — that is why the file is required, not optional.
 
 ## ✅ Verified working — every key is tested
 
@@ -192,6 +197,7 @@ node src/cli.js --help
 | `--screen` | test the pool against the panel and print live/dead per exit |
 | `--verify` | live-verify `keys.txt`; dead keys are written to `keys-dead.txt` |
 | `--models` | print the free model ids |
+| `--strict-proxy` | never send a direct request: the live gate must also go through the pool (env `TOKENHARBOR_STRICT=1` does the same) |
 
 A dying exit never costs an account: sign-up and the live gate both retry on other pool lines,
 and a `429` waits the time the panel names.
