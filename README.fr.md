@@ -1,48 +1,87 @@
 <div align="center">
 
+```
+████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗██╗  ██╗ █████╗ ██████╗ ██████╗  ██████╗ ██████╗
+╚══██╔══╝██╔═══██╗██║ ██╔╝██╔════╝████╗  ██║██║  ██║██╔══██╗██╔══██╗██╔══██╗██╔═══██╗██╔══██╗
+   ██║   ██║   ██║█████╔╝ █████╗  ██╔██╗ ██║███████║███████║██████╔╝██████╔╝██║   ██║██████╔╝
+   ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║██╔══██║██╔══██║██╔══██╗██╔══██╗██║   ██║██╔══██╗
+   ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║██║  ██║██║  ██║██║  ██║██║  ██║╚██████╔╝██║  ██║
+   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
+```
+
+# tokenharbor-bulk-apikey
+
+**Créez en masse des comptes Token Harbor avec des clés API générées automatiquement — inférence compatible OpenAI (DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash) + connecteurs 9Router / OmniRoute.**
+
+[![Node](https://img.shields.io/badge/Node-%E2%89%A518-3DA639?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Dependencies](https://img.shields.io/badge/dependencies-1%20(browser%20only)-blue?style=for-the-badge)](#)
+[![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
+[![Models](https://img.shields.io/badge/free%20models-4-412991?style=for-the-badge)](https://tokenharbor.ai/pricing)
+[![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
+
+[🛠 Démarrage rapide](#-quick-start) · [🎁 Offre gratuite](#-free-tier--how-much-you-get) · [🤖 Modèles](#-models--all-4-of-them) · [🧪 Utiliser l'API](#-how-to-use-the-api) · [✅ Vérifié](#-verified-working--every-key-is-tested) · [🧭 Fonctionnement](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Options](#️-cli-options) · [🛰️ Proxys](#️-behind-a-proxy) · [🐞 Problèmes](#-issues)
+
+</div>
+
+<div align="center">
+
 **English** · [Türkçe](README.tr.md) · [中文](README.cn.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Português](README.pt.md)
 
 </div>
 
-# Token Harbor — clés API en masse
+---
 
-Créez des comptes et des clés API Token Harbor (tokenharbor.ai) depuis votre terminal.
-Token Harbor expose un point de terminaison **compatible OpenAI** avec un niveau gratuit
-permanent, donc une clé fonctionne dans n'importe quel SDK OpenAI, CLI ou routeur local.
+## ✨ Pourquoi cet outil existe
 
-```bash
-git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
-cd tokenharbor-bulk-apikey
-npm install
-echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # free Mailtrap API token, one line (see Setup)
-npm start            # menu → "Mint keys" → how many → done
-```
+Token Harbor est un panneau Next.js (authentification Supabase) dont l'offre gratuite est **basée sur un pourcentage** : une
+**fenêtre personnelle de 7 jours** démarre à votre première requête gratuite et consomme une part du
+prix catalogue, et non un nombre fixe de requêtes. L'inscription se fait par e-mail + mot de passe avec un **widget
+Cloudflare Turnstile** et une limite par réseau — un réseau signifie un compte — donc une exécution en masse est
+en réalité « une sortie fraîche par compte ».
 
-`npm start` ouvre un menu ; choisissez **1) Mint keys**, saisissez un nombre, et le CLI crée un
-compte par clé, vérifie chacun avec un **appel de chat en direct**, et écrit les survivants dans
-`keys.txt`. Après le jeton Mailtrap à usage unique ci-dessous, rien d'autre n'est demandé : pas de jetons captcha, pas de proxy, pas d'invites.
+Deux barrières se dressent après l'inscription et toutes deux sont faciles à manquer : l'API répond
+`403 email_verification_required` tant que le lien de l'e-mail d'inscription n'est pas ouvert, et chaque
+route `:free` répond `403 free_models_disabled` tant que le consentement aux modèles gratuits n'est pas activé —
+et ce point de terminaison de consentement **valide le texte affiché par le client** (`shown_text`), donc un simple
+`{"free_models_enabled":true}` répond `400 reload_and_retry`. Cette CLI fait tout cela,
+lit les identifiants d'action Next.js depuis la page en direct à chaque exécution, et n'écrit que les clés qui passent
+un chat-200 en direct.
 
-## Configuration (une minute)
+## 🎁 Offre gratuite — ce que vous obtenez
 
-Token Harbor accepte un domaine de messagerie qui ressemble à un véritable hôte de courrier entrant et refuse
-les domaines jetables publics, donc le CLI a besoin d'une boîte aux lettres qu'il peut lire :
+| Quoi | Valeur |
+| --- | --- |
+| Modèles gratuits | **4** — DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash (suffixe `:free`) |
+| Allocation | **pourcentage du prix catalogue**, pas de nombre fixe de requêtes (mesuré : toujours `0%` après ~25 appels) |
+| Fenêtre | **7 jours personnels**, démarre à votre première requête gratuite (en-tête `x-th-free-resets`) |
+| Limite de débit du compte | **60 req/min**, **1 800 req/h** |
+| Limite de débit par IP | **100 req/min**, **3 000 req/h** (au-delà, réponse `429` avec le temps d'attente) |
+| Concurrence | non plafonnée |
+| Modèles payants | 70+ (Claude, Grok, GLM, MiMo Pro …) — ils nécessitent des crédits ; un compte à solde nul répond `402` |
+| Carte requise | **Non** |
+| Téléphone requis | **Non** |
+| Captcha | **Cloudflare Turnstile** à l'inscription — `src/solver.js` génère un vrai jeton dans un Chrome hors écran via la même sortie |
+| Vérification e-mail | **requise** — la CLI ouvre le lien et suit la redirection `307` vers `?verify=success` |
+| L'unité qui s'adapte | **un compte = une clé** → `--count N` signifie en réalité « N comptes depuis N réseaux » |
 
-1. Créez un compte gratuit sur [mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**.
-2. Placez le jeton dans  à côté de  (une ligne), ou exportez .
+En-têtes à surveiller : `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
+`x-th-upstream-model`, `x-th-route-decision`.
 
-C'est la seule étape de configuration. Tout le reste — la boîte de réception par compte, le lien de vérification,
-le consentement aux modèles gratuits, la clé — est automatique.
+## 🤖 Modèles — les 4
 
-## Ce que vous obtenez
+| Identifiant du modèle | Remarques |
+| --- | --- |
+| `deepseek-v4.1-flash:free` | celui par défaut ; répond PONG en ~9-11 s |
+| `deepseek-v4-flash:free` | modèle de secours que la CLI essaie aussi lors du test en direct |
+| `mimo-v2.5:free` | famille MiMo |
+| `mimo-v2.6-flash:free` | le plus rapide des quatre |
 
-| champ | valeur |
-|---|---|
-| Base de l'API | `https://tokenharbor.ai/v1` |
-| Authentification | `Authorization: Bearer YOUR_KEY` |
-| Modèles gratuits | `deepseek-v4.1-flash:free` · `deepseek-v4-flash:free` · `mimo-v2.5:free` · `mimo-v2.6-flash:free` |
-| Modèles payants | 70+ (Claude, Grok, GLM, MiMo Pro …) — ils nécessitent des crédits sur le compte |
-| Format de clé | `thk_live_` + 63 caractères |
-| Carte / téléphone | non requis pour le niveau gratuit |
+Le point de terminaison sert **78 identifiants de modèles** au total (`GET /v1/models` avec n'importe quelle clé valide) ; les quatre
+ci-dessus sont ceux qui fonctionnent sans crédits. Les outils/appels de fonction fonctionnent sur les routes gratuites :
+un schéma `get_time` revient sous forme de véritable tableau `tool_calls`.
+
+## 🧪 Comment utiliser l'API
 
 ```bash
 curl https://tokenharbor.ai/v1/chat/completions \
@@ -61,108 +100,167 @@ print(client.chat.completions.create(
 ).choices[0].message.content)
 ```
 
-## CLI
+## 🚀 Une seule commande
 
 ```bash
-node src/cli.js --auto --count 5        # five accounts → five keys, one command
-node src/cli.js --auto --count 5 --pool proxies.txt
-node src/cli.js --verify                # re-check every key in keys.txt with a live call
-node src/cli.js --models                # print the free model list (needs a key)
-node src/cli.js --help
+npm start            # menu → "Mint keys" → combien → terminé
 ```
 
-| option | signification |
-|---|---|
-| `--count <n>` | comptes (et clés) à créer, par défaut 1 |
-| `--pool <file>` | liste de proxies, une sortie par ligne (`http://host:port`, `socks5://user:pass@host:port`, `host:port`) |
-| `--headless` | exécuter le navigateur de secours en mode headless (par défaut : fenêtre hors écran, ce que le captcha attend) |
-| `--verify` | vérifier en direct `keys.txt` et afficher live/dead par clé |
+`npm start` ouvre le lanceur, **1) Mint keys** demande un nombre et rien d'autre, puis la CLI
+crée un compte par clé, vérifie chacun avec un appel de chat en direct et écrit les survivants
+dans `keys.txt`.
 
-Sortie : `keys.txt` (une clé par ligne, uniquement les clés qui ont réussi), `accounts.jsonl` (une ligne
-par compte avec les résultats des étapes, aucun secret au-delà de l'e-mail du compte qui vous appartient).
+## 🛠 Démarrage rapide
 
-## Comment fonctionne la création
+```bash
+git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
+cd tokenharbor-bulk-apikey
+npm install
+echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # jeton API Mailtrap gratuit, une ligne
+npm start
+```
 
-1. **Boîte aux lettres** — avec un jeton Mailtrap (niveau gratuit, une ligne dans `mailtrap.txt`) le CLI ouvre une
-   boîte de réception fraîche par compte sur votre propre compte Mailtrap ; sans lui, il se rabat sur les
-   services publics mail.tm / mail.gw.
-2. **Inscription** — les identifiants d'action du serveur Next.js sont lus depuis la page en direct à chaque exécution, donc
-   un redéploiement du panneau ne casse pas le CLI. L'empreinte de l'appareil et le fuseau horaire voyagent
-   avec la requête ; le fuseau horaire est mesuré depuis votre sortie, pas depuis votre machine.
-3. **Vérification humaine** — un domaine de messagerie jetable fait répondre au panneau « complete the human check »
-   (et il n'affiche même pas le widget là-bas), donc un véritable hôte de courrier entrant est le rail qui
-   fonctionne. Lorsqu'un widget *est* affiché, l'inscription est
-   rejouée dans un vrai Chrome (`src/solver.js`, `puppeteer-core` + le Chrome déjà présent sur votre
-   machine) : le formulaire est saisi avec de vraies frappes, la case Turnstile est cliquée avec la
-   souris, et les cookies de session sont renvoyés au CLI.
-4. **Vérification par e-mail** — le lien de la boîte aux lettres est ouvert (le jeton est consommé
-   côté serveur et répond par un `307` vers `?verify=success`).
-5. **Consentement aux modèles gratuits** — l'interrupteur de partage de données est activé avec le texte de consentement que
-   le tableau de bord affiche (`src/consent-text.txt`). Sans lui, chaque appel `:free` répond
-   `403 free_models_disabled`.
-6. **Clé** — `POST /api/keys`, puis un **contrôle en direct** : deux invites différentes doivent toutes deux répondre
-   `200` avec un texte non vide et différent. Une clé qui échoue au contrôle n'est jamais écrite.
+**Le jeton Mailtrap est la seule étape de configuration.** Token Harbor accepte un domaine de messagerie qui ressemble
+à un véritable hôte de courrier entrant et répond « complete the human check » aux domaines jetables publics
+(pour ceux-ci, il n'affiche même pas le widget), donc la CLI a besoin d'une boîte aux lettres qu'elle peut
+lire. L'offre gratuite suffit : créez un compte sur [mailtrap.io](https://mailtrap.io) → **Settings
+→ API Tokens** → collez le jeton dans `mailtrap.txt` (ou exportez `MAILTRAP_TOKEN`).
 
-## Contrôles de qualité
+Sans le jeton, la CLI fonctionne quand même, se rabat sur des services de messagerie publics et vous indique
+clairement quand le panneau refuse cette adresse.
 
-Chaque clé dans `keys.txt` a réussi, au moment de la création :
+## ✅ Vérifié fonctionnel — chaque clé est testée
+
+Une clé n'est écrite dans `keys.txt` qu'après, au moment de la création :
 
 - un `chat-200` en direct sur un modèle `:free`, et
 - **deux invites différentes** répondant 200 avec un contenu non vide et **différent**.
 
-Une clé qui ne peut pas utiliser d'outils, une clé morte ou un fournisseur mort n'est jamais écrit dans la sortie
-de ce dépôt ni câblé dans un combo. Revérifiez à tout moment avec `node src/cli.js --verify`.
+Mesuré de bout en bout (`node src/cli.js --auto --count 1 --pool proxies.txt`) :
 
-## Limites (niveau gratuit)
+```
+[1/1] mailbox th-…@inbound-mailtrap.io (mailtrap)
+   precheck 200 · human check no
+   signup 200 · session ok
+   verify 307 https://tokenharbor.ai/dashboard?verify=success
+   consent 200
+   key 201
+  ✔ thk_live_… saved to keys.txt (1/1)
+done
+```
 
-| limite | valeur |
-|---|---|
-| allocation | **pourcentage du prix catalogue** — pas de nombre fixe de requêtes |
-| fenêtre | **7 jours personnels**, commence à votre première requête gratuite (`x-th-free-resets`) |
-| débit par compte | 60 requêtes/min, 1 800 requêtes/heure |
-| débit par IP | 100 requêtes/min, 3 000 requêtes/heure |
-| concurrence | non plafonnée ; au-delà du débit, réponse `429` |
+Revérifiez à tout moment avec `npm start` → **2) Verify keys** (`node src/cli.js --verify`) ; les clés mortes
+passent dans `keys-dead.txt`, une clé dont le test en direct n'a pas pu aboutir (par ex. le réseau a atteint une
+limite de débit) atterrit dans `keys-unverified.txt` afin que le compte ne soit jamais perdu.
 
-En-têtes de réponse à journaliser : `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
-`x-th-upstream-model`, `x-th-route-decision`.
+## 🧭 Fonctionnement
 
-## Proxies — facultatif
+1. **Boîte aux lettres** — une boîte de réception fraîche par compte sur votre compte Mailtrap (`mailtrap.txt`) ; les services publics
+   mail.tm / mail.gw sont les solutions de repli.
+2. **Inscription** — les identifiants d'action serveur Next.js (`next-action`, `$ACTION_KEY`,
+   `x-deployment-id`) sont lus depuis la page en direct à chaque exécution, donc un redéploiement du panneau ne casse pas
+   la CLI ; l'empreinte de l'appareil et le fuseau horaire accompagnent la requête, et le fuseau horaire est
+   mesuré depuis la sortie, pas depuis votre machine.
+3. **Vérification humaine** — lorsque le panneau affiche le widget, l'inscription est rejouée dans un vrai Chrome
+   (`src/solver.js`, `puppeteer-core` + le Chrome déjà installé ; `--enable-automation` est
+   volontairement supprimé), la case est cochée à la souris, et les cookies de session de ce navigateur sont renvoyés à la CLI.
+4. **Vérification e-mail** — le lien de la boîte aux lettres est ouvert ; le jeton est consommé
+   côté serveur et répond `307 → /dashboard?verify=success`.
+5. **Consentement aux modèles gratuits** — `POST /api/me/privacy` avec le texte de consentement affiché par le tableau de bord
+   (`src/consent-text.txt`), `screen: "consent_modal"`, `path: "/dashboard"`.
+6. **Clé + test en direct** — `POST /api/keys`, puis deux invites différentes doivent toutes deux répondre 200 avec
+   un contenu différent avant que la clé ne soit écrite.
 
-Le CLI fonctionne **directement** par défaut. Placez une sortie par ligne dans `proxies.txt` (ou passez
-`--pool`) et chaque requête — y compris le navigateur de secours — sort via un proxy :
+## ⚙️ Options de la CLI
+
+```bash
+node src/cli.js --auto --count 5             # cinq comptes → cinq clés
+node src/cli.js --auto --count 5 --pool proxies.txt
+node src/cli.js --verify                     # vérifie en direct keys.txt, les mortes → keys-dead.txt
+node src/cli.js --screen --pool proxies.txt  # quelles sorties atteignent le panneau
+node src/cli.js --models                     # la liste des modèles gratuits (nécessite une clé)
+node src/cli.js --help
+```
+
+| option | signification |
+| --- | --- |
+| `--count <n>` | comptes (et clés) à créer, 1 par défaut |
+| `--pool <file>` | liste de proxys, une sortie par ligne (`http://host:port`, `socks5://user:pass@host:port`, `host:port`) ; les commentaires `#` en ligne sont acceptés |
+| `--headless` | exécute le navigateur de secours en mode headless (par défaut : fenêtre hors écran, ce qu'attend le captcha) |
+| `--screen` | teste le pool contre le panneau et affiche en direct/mort par sortie |
+| `--verify` | vérifie en direct `keys.txt` ; les clés mortes sont écrites dans `keys-dead.txt` |
+| `--models` | affiche les identifiants des modèles gratuits |
+
+Une sortie défaillante ne coûte jamais un compte : l'inscription et le test en direct réessaient tous deux sur d'autres lignes du pool,
+et un `429` attend le temps indiqué par le panneau.
+
+## 🛰️ Derrière un proxy
+
+La CLI s'exécute **en direct** par défaut. Placez une sortie par ligne dans `proxies.txt` (le lanceur la prend
+automatiquement en compte) ou passez `--pool` :
 
 ```text
 http://127.0.0.1:8080
 socks5://user:pass@10.0.0.5:1080
+10.0.0.5:8080
 ```
 
-Facultatif — recommandé à grande échelle : le panneau limite les inscriptions par réseau, donc une sortie fraîche
-par compte maintient une exécution plus importante en bonne santé.
+Facultatif — recommandé à grande échelle : le panneau limite les inscriptions **par réseau**, donc une sortie fraîche
+par compte maintient une exécution plus importante en bonne santé. Le courrier est lu directement depuis votre compte Mailtrap (un
+fournisseur de messagerie n'est pas le panneau), donc une sortie lente ne peut pas casser l'étape de la boîte aux lettres.
 
-## Connecter un routeur local
+## 📄 Fichiers
 
-Les deux connecteurs sont idempotents et lisent `keys.txt` :
+| Chemin | Quoi |
+| --- | --- |
+| `keys.txt` | clés vérifiées, une par ligne (écrites uniquement après le test en direct) |
+| `keys-dead.txt` | clés qui ont cessé de répondre (depuis `--verify`) |
+| `keys-unverified.txt` | clés dont le test en direct n'a pas pu aboutir — le compte existe, la clé est réelle |
+| `accounts.jsonl` | une ligne par compte : e-mail + résultats des étapes |
+| `mailtrap.txt` | votre jeton API Mailtrap (une ligne) |
+| `proxies.txt` | liste de proxys facultative |
+| `src/cli.js` | la CLI de création / vérification / test |
+| `src/launcher.js` | le menu (`npm start`) |
+| `src/solver.js` | la partie navigateur pour le widget Turnstile |
+| `src/consent-text.txt` | le texte de consentement validé par le panneau |
+| `src/connect-9router.js`, `src/connect-omniroute.js` | connecteurs de routeur |
+
+## 🔌 Connexion à 9Router
 
 ```bash
-node src/connect-9router.js    --base http://localhost:8080 --password 123456
-node src/connect-omniroute.js  --base http://localhost:20128 --password 123456
+node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
-Chacun crée un nœud de fournisseur `openai-compatible` (`tokenharbor`) avec l'URL de base
-`https://tokenharbor.ai/v1` et une connexion par clé, de sorte que le routeur répartit la charge entre
-vos clés. Le menu du lanceur expose les deux mêmes actions.
+Enregistre un nœud fournisseur `openai-compatible` (`tokenharbor`, URL de base
+`https://tokenharbor.ai/v1`) et une connexion par clé dans `keys.txt`, afin que 9Router répartisse la charge
+entre vos clés. Idempotent : un nœud ou une connexion existant est réutilisé, et la numérotation continue
+à partir du plus haut `tokenharbor-0NN` déjà présent.
 
-## Remarques
+## 🔌 Connexion à OmniRoute
 
-- Chaque compte appartient à l'adresse e-mail avec laquelle il a été créé — conservez `accounts.jsonl`
-  si vous voulez vous reconnecter plus tard.
-- Le niveau gratuit stocke le trafic de la route gratuite sous le consentement décrit dans
-  `src/consent-text.txt` ; les routes payantes ne sont pas utilisées pour l'entraînement.
-- Le texte de consentement est versionné par le panneau. S'il change, le CLI le signale et vous relancez
-  une fois après avoir appuyé sur **Enable free models** dans le tableau de bord.
-- Node.js 18+ est requis. `puppeteer-core` n'est utilisé que lorsque le panneau demande la vérification
-  humaine ; le CLI lui-même n'utilise que la bibliothèque standard.
+```bash
+node src/connect-omniroute.js --base http://localhost:20128 --password 123456
+```
 
-## Licence
+Même forme pour OmniRoute (nœud fournisseur + une connexion par clé). Le lanceur les expose tous deux comme
+éléments de menu **6** et **7**, et `npm run 9router` / `npm run omniroute` font de même.
 
-MIT — voir [LICENSE](LICENSE).
+## 🔑 Ce qu'une clé vous donne
+
+- les quatre modèles `:free` ci-dessus, à 60 req/min et 1 800 req/h par compte (100 req/min par IP) ;
+- une allocation basée sur un pourcentage dans une fenêtre personnelle de 7 jours (`x-th-free-resets` vous indique quand
+  elle se réinitialise) ;
+- un `/v1/chat/completions` compatible OpenAI avec appels d'outils, donc n'importe quel SDK, CLI ou routeur OpenAI
+  fonctionne en changeant `base_url` en `https://tokenharbor.ai/v1` ;
+- les modèles payants restent verrouillés tant que le compte n'a pas de crédits (`402` sinon).
+
+## 🐞 Problèmes
+
+Ouvrez un ticket avec la commande, l'étape qui a échoué (la CLI affiche `precheck / signup /
+verify / consent / key / chat`) et le message du panneau lui-même. Ne collez jamais une clé API complète — les
+quatre derniers caractères suffisent.
+
+## 📄 Licence
+
+MIT — voir [LICENSE](LICENSE). L'outil n'est pas affilié à Token Harbor ; utilisez-le pour des comptes
+qui vous appartiennent et respectez les conditions du panneau.
