@@ -3,6 +3,8 @@ node_modules/
 # generated material — never commit
 keys.txt
 proxies.txt
+*.hops
+proxies.txt*
 keys.json
 *.txt
 !src/consent-text.txt
