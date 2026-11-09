@@ -470,6 +470,14 @@ async function mintOne({ px, pool, index, total, log }) {
   let r = await req(link, { px, jar, headers: { accept: 'text/html' } });
   steps.verify = r.status;
   log(`   verify ${r.status} ${r.headers.location || ''}`);
+  // A finished inbox is dead weight: Mailtrap caps an account at 300.
+  if (mail.rail === 'mailtrap' && mail.id) {
+    try {
+      await req(`${mail.api}/inbound/inboxes/${mail.id}`, { px: null, method: 'DELETE', headers: { authorization: `Bearer ${mail.token}`, accept: 'application/json' } });
+    } catch (e) {
+      /* a stuck inbox is swept by the provider later */
+    }
+  }
   const loc = r.headers.location;
   if (loc) await req(loc.startsWith('http') ? loc : BASE + loc, { px, jar, headers: { accept: 'text/html' } }).catch(() => {});
   const consentText = fs.readFileSync(CONSENT_TEXT, 'utf8').trim();
