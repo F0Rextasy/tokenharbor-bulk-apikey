@@ -6,7 +6,7 @@
 
 # Token Harbor — 批量 API 密钥
 
-从你的终端创建 Token Harbor (tokenharbor.ai) 账户和 API 密钥。
+从你的终端创建 Token Harbor（tokenharbor.ai）账户和 API 密钥。
 Token Harbor 提供**兼容 OpenAI** 的端点，并带有永久免费套餐，因此
 密钥可在任何 OpenAI SDK、CLI 或本地路由器中使用。
 
@@ -20,7 +20,7 @@ npm start            # menu → "Mint keys" → how many → done
 
 `npm start` 会打开一个菜单；选择 **1) Mint keys**，输入一个数字，CLI 就会为每个密钥创建一个
 账户，用**实时聊天调用**验证每一个，并将通过验证的密钥写入
-`keys.txt`。完成下面一次性的 Mailtrap 令牌设置后，不会再询问其他内容：无需验证码令牌、无需代理、无需提示。
+`keys.txt`。完成下面一次性的 Mailtrap 令牌设置后，不会再询问其他内容：没有验证码令牌，没有代理，没有提示。
 
 ## 设置（一分钟）
 
@@ -85,31 +85,31 @@ node src/cli.js --help
 
 1. **邮箱** — 使用 Mailtrap 令牌（免费套餐，在 `mailtrap.txt` 中一行）时，CLI 会在你自己的 Mailtrap 账户上
    为每个账户打开一个新收件箱；没有它时，则回退到
-   公共 mail.tm / mail.gw 服务。
-2. **注册** — Next.js 服务器操作 ID 在每次运行时从实时页面读取，因此
+   公共的 mail.tm / mail.gw 服务。
+2. **注册** — 每次运行时都会从实时页面读取 Next.js 服务器操作 ID，因此
    面板重新部署不会破坏 CLI。设备指纹和时区随
-   请求一起发送；时区从你的出口测量，而不是从你的机器。
-3. **人工检查** — 一次性邮件域名会让面板回答“完成人工检查”
-   （而且它甚至不会在那里渲染组件），因此真实入站邮件主机是可行的
-   路径。当组件*确实*被渲染时，注册会在
-   真实 Chrome 中重放（`src/solver.js`、`puppeteer-core` + 你机器上已有的 Chrome）：
-   表单用真实按键输入，Turnstile 复选框用鼠标点击，会话 cookie 交回给 CLI。
+   请求一起发送；时区是从你的出口测量的，而不是从你的机器。
+3. **人工检查** — 一次性邮件域名会让面板回答“complete the human check”
+   （而且它甚至不会在那里渲染小部件），因此真实的入站邮件主机是可行的
+   途径。当小部件*确实*被渲染时，注册会在真实的 Chrome 中
+   重放（`src/solver.js`、`puppeteer-core` + 你机器上已有的 Chrome）：
+   表单用真实按键输入，Turnstile 复选框用鼠标点击，会话 cookie 被交回给 CLI。
 4. **电子邮件验证** — 打开来自邮箱的链接（令牌在
    服务器端被消耗，并返回 `307` 到 `?verify=success`）。
 5. **免费模型同意** — 使用仪表板显示的同意文本启用数据共享开关
    （`src/consent-text.txt`）。没有它，每次 `:free` 调用都会返回
    `403 free_models_disabled`。
-6. **密钥** — `POST /api/keys`，然后进行**实时门控**：两个不同的提示都必须返回
-   `200`，且文本非空且不同。未通过门控的密钥绝不会被写入。
+6. **密钥** — `POST /api/keys`，然后进行**实时门禁**：两个不同的提示都必须返回
+   `200`，且文本非空且不同。未通过门禁的密钥绝不会被写入。
 
-## 质量门控
+## 质量门禁
 
 `keys.txt` 中的每个密钥在铸造时都通过了：
 
 - 在 `:free` 模型上的实时 `chat-200`，以及
 - **两个不同的提示**返回 200，且内容非空且**不同**。
 
-无法使用工具的密钥、失效的密钥或失效的提供商会绝不会写入此仓库的
+无法使用工具的密钥、失效的密钥或失效的提供商会绝不会被写入此仓库的
 输出或接入组合。可随时用 `node src/cli.js --verify` 重新检查。
 
 ## 限制（免费套餐）
@@ -125,7 +125,7 @@ node src/cli.js --help
 值得记录的响应头：`x-th-plan`、`x-th-free-used-pct`、`x-th-free-resets`、
 `x-th-upstream-model`、`x-th-route-decision`。
 
-## 代理——可选
+## 代理 — 可选
 
 CLI 默认**直连**。在 `proxies.txt` 中每行放一个出口（或传入
 `--pool`），每个请求——包括回退浏览器——都会通过代理发出：
@@ -148,19 +148,20 @@ node src/connect-omniroute.js  --base http://localhost:20128 --password 123456
 ```
 
 每个都会创建一个 `openai-compatible` 提供商节点（`tokenharbor`），基础 URL 为
-`https://tokenharbor.ai/v1`，每个密钥一个连接，因此路由器会在
+`https://tokenharbor.ai/v1`，并为每个密钥创建一个连接，因此路由器会在
 你的密钥之间进行负载均衡。启动器菜单提供相同的两个操作。
 
 ## 说明
 
-- 每个账户属于创建它时使用的电子邮件地址——如果你想以后重新登录，请保留 `accounts.jsonl`。
+- 每个账户属于创建它时使用的电子邮件地址——如果你想以后重新登录，
+  请保留 `accounts.jsonl`。
 - 免费套餐根据 `src/consent-text.txt` 中描述的同意存储免费路由流量；
   付费路由不用于训练。
 - 同意文本由面板进行版本管理。如果它发生变化，CLI 会提示，你在仪表板中按下 **Enable free models** 后
-  重新运行一次即可。
+  重新运行一次。
 - 需要 Node.js 18+。`puppeteer-core` 仅在面板要求人工
   检查时使用；CLI 本身仅使用标准库。
 
 ## 许可证
 
-MIT——见 [LICENSE](LICENSE)。
+MIT — 见 [LICENSE](LICENSE)。

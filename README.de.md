@@ -8,7 +8,7 @@
 
 Erstelle Token-Harbor-Konten (tokenharbor.ai) und API-Schlüssel über dein Terminal.
 Token Harbor bietet einen **OpenAI-kompatiblen** Endpunkt mit einer dauerhaft kostenlosen Stufe, sodass ein
-Schlüssel in jedem OpenAI-SDK, CLI oder lokalen Router funktioniert.
+Schlüssel in jedem OpenAI-SDK, jeder CLI oder jedem lokalen Router funktioniert.
 
 ```bash
 git clone https://github.com/F0Rextasy/tokenharbor-bulk-apikey.git
@@ -31,7 +31,7 @@ Token Harbor akzeptiert eine Mail-Domain, die wie ein echter Inbound-Mail-Host a
 2. Lege das Token in  neben  ab (eine Zeile), oder exportiere .
 
 Das ist der einzige Einrichtungsschritt. Alles andere — das Postfach pro Konto, der Verifizierungslink,
-die Zustimmung zu den kostenlosen Modellen, der Schlüssel — erfolgt automatisch.
+die Zustimmung zu den kostenlosen Modellen, der Schlüssel — ist automatisch.
 
 ## Was du bekommst
 
@@ -75,8 +75,8 @@ node src/cli.js --help
 |---|---|
 | `--count <n>` | Anzahl der zu erstellenden Konten (und Schlüssel), Standard 1 |
 | `--pool <file>` | Proxy-Liste, ein Exit pro Zeile (`http://host:port`, `socks5://user:pass@host:port`, `host:port`) |
-| `--headless` | Fallback-Browser headless ausführen (Standard: Off-Screen-Fenster, was das Captcha erwartet) |
-| `--verify` | `keys.txt` live verifizieren und live/dead pro Schlüssel ausgeben |
+| `--headless` | den Fallback-Browser headless ausführen (Standard: Off-Screen-Fenster, was das Captcha erwartet) |
+| `--verify` | `keys.txt` live verifizieren und live/tot pro Schlüssel ausgeben |
 
 Ausgabe: `keys.txt` (ein Schlüssel pro Zeile, nur Schlüssel, die bestanden haben), `accounts.jsonl` (eine Zeile
 pro Konto mit den Schrittergebnissen, keine Geheimnisse außer der Konto-E-Mail, die dir gehört).
@@ -84,14 +84,14 @@ pro Konto mit den Schrittergebnissen, keine Geheimnisse außer der Konto-E-Mail,
 ## Wie das Minting funktioniert
 
 1. **Postfach** — mit einem Mailtrap-Token (kostenlose Stufe, eine Zeile in `mailtrap.txt`) öffnet die CLI ein
-   frisches Postfach pro Konto in deinem eigenen Mailtrap-Konto; ohne es fällt sie auf die
+   frisches Postfach pro Konto auf deinem eigenen Mailtrap-Konto; ohne es fällt sie auf die
    öffentlichen Dienste mail.tm / mail.gw zurück.
 2. **Registrierung** — die Next.js-Server-Action-IDs werden bei jedem Lauf von der Live-Seite gelesen, sodass
    ein Panel-Redeploy die CLI nicht bricht. Der Geräte-Fingerabdruck und die Zeitzone werden
    mit der Anfrage übertragen; die Zeitzone wird von deinem Exit gemessen, nicht von deinem Rechner.
-3. **Menschliche Prüfung** — eine Wegwerf-Mail-Domain lässt das Panel mit „complete the human check“ antworten
+3. **Menschliche Prüfung** — eine Wegwerf-Mail-Domain bringt das Panel dazu, „complete the human check“ zu antworten
    (und es rendert das Widget dort nicht einmal), daher ist ein echter Inbound-Mail-Host die Schiene, die
-   funktioniert. Wenn ein Widget *gerendert wird*, wird die Registrierung
+   funktioniert. Wenn ein Widget *gerendert* wird, wird die Registrierung
    in einem echten Chrome wiederholt (`src/solver.js`, `puppeteer-core` + das bereits auf deinem
    Rechner vorhandene Chrome): Das Formular wird mit echten Tastenanschlägen ausgefüllt, das Turnstile-Kontrollkästchen wird mit der
    Maus angeklickt, und die Sitzungs-Cookies werden an die CLI zurückgegeben.
@@ -109,17 +109,17 @@ Jeder Schlüssel in `keys.txt` hat zum Zeitpunkt des Mintings bestanden:
 - einen Live-`chat-200` auf einem `:free`-Modell, und
 - **zwei verschiedene Prompts**, die mit 200 und nicht-leerem und **unterschiedlichem** Inhalt antworten.
 
-Ein Schlüssel, der keine Tools nutzen kann, ein toter Schlüssel oder ein toter Anbieter wird niemals in die
+Ein Schlüssel, der keine Tools verwenden kann, ein toter Schlüssel oder ein toter Anbieter wird niemals in die
 Ausgabe dieses Repos geschrieben oder in eine Combo eingebunden. Jederzeit erneut prüfen mit `node src/cli.js --verify`.
 
 ## Limits (kostenlose Stufe)
 
 | Limit | Wert |
 |---|---|
-| Kontingent | **Prozentsatz des Listenpreises** — keine feste Anfragenanzahl |
-| Fenster | **persönliche 7 Tage**, beginnt mit deiner ersten kostenlosen Anfrage (`x-th-free-resets`) |
-| Konto-Rate | 60 Anfragen/Minute, 1.800 Anfragen/Stunde |
-| IP-Rate | 100 Anfragen/Minute, 3.000 Anfragen/Stunde |
+| Kontingent | **Prozentsatz des Listenpreises** — keine feste Anfrageanzahl |
+| Zeitfenster | **persönliche 7 Tage**, beginnt mit deiner ersten kostenlosen Anfrage (`x-th-free-resets`) |
+| Konto-Rate | 60 Anfragen/Min., 1.800 Anfragen/Stunde |
+| IP-Rate | 100 Anfragen/Min., 3.000 Anfragen/Stunde |
 | Parallelität | nicht begrenzt; bei Überschreitung der Rate antwortet `429` |
 
 Response-Header, die es sich zu protokollieren lohnt: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
@@ -147,15 +147,15 @@ node src/connect-9router.js    --base http://localhost:8080 --password 123456
 node src/connect-omniroute.js  --base http://localhost:20128 --password 123456
 ```
 
-Jeder erstellt einen `openai-compatible`-Provider-Knoten (`tokenharbor`) mit Basis-URL
-`https://tokenharbor.ai/v1` und einer Verbindung pro Schlüssel, sodass der Router über
-deine Schlüssel lastverteilt. Das Launcher-Menü bietet dieselben beiden Aktionen.
+Jeder erstellt einen `openai-compatible`-Provider-Knoten (`tokenharbor`) mit der Basis-URL
+`https://tokenharbor.ai/v1` und einer Verbindung pro Schlüssel, sodass der Router die Last über
+deine Schlüssel verteilt. Das Launcher-Menü bietet dieselben beiden Aktionen.
 
 ## Hinweise
 
 - Jedes Konto gehört zu der E-Mail-Adresse, mit der es erstellt wurde — bewahre `accounts.jsonl`
   auf, wenn du dich später wieder anmelden möchtest.
-- Die kostenlose Stufe speichert Free-Route-Traffic unter der in
+- Die kostenlose Stufe speichert den Datenverkehr der kostenlosen Route unter der in
   `src/consent-text.txt` beschriebenen Zustimmung; kostenpflichtige Routen werden nicht zum Training verwendet.
 - Der Zustimmungstext wird vom Panel versioniert. Wenn er sich ändert, sagt die CLI es dir, und du führst sie
   einmal erneut aus, nachdem du im Dashboard auf **Enable free models** geklickt hast.

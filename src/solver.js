@@ -126,7 +126,11 @@ async function signupInBrowser({ px = null, email, password, log = () => {}, hea
   try {
     const page = await browser.newPage();
     await proxyAuth(page, px);
-    await page.goto(`${BASE}/signup`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    try {
+      await page.goto(`${BASE}/signup`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+    } catch (e) {
+      return { ok: false, why: `browser could not load the page (${String(e.message).slice(0, 60)})` };
+    }
     await page
       .waitForSelector('input[name="email"]', { timeout: 60000 })
       .catch(() => {});

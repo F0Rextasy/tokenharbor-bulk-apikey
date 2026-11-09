@@ -56,15 +56,16 @@ function pool() {
   const lines = fs
     .readFileSync(String(file), 'utf8')
     .split(/\r?\n/)
-    .map((l) => l.trim())
+    .map((l) => l.replace(/\s+#.*$/, '').trim()) // pool files often carry trailing comments
     .filter((l) => l && !l.startsWith('#'));
   if (!lines.length) throw new Error(`pool ${file} is empty`);
   return lines.map(parseProxy);
 }
 function parseProxy(line) {
-  const m = String(line).match(/^(https?|socks5h?):\/\/(?:([^:@/]+):([^@/]*)@)?([^:/]+):(\d+)\/?$/i);
+  const clean = String(line).replace(/\s+#.*$/, '').trim();
+  const m = clean.match(/^(https?|socks5h?):\/\/(?:([^:@/]+):([^@/]*)@)?([^:/]+):(\d+)\/?$/i);
   if (!m) {
-    const bare = String(line).match(/^([^:/]+):(\d+)$/);
+    const bare = clean.match(/^([^:/]+):(\d+)$/);
     if (bare) return { protocol: 'http', username: null, password: null, host: bare[1], port: Number(bare[2]) };
     throw new Error(`bad proxy line: ${String(line).slice(0, 40)}`);
   }
@@ -111,8 +112,13 @@ async function req(url, { method = 'GET', headers = {}, body = null, px = null, 
   const h = { 'user-agent': UA, ...(jar ? { cookie: jar.header() } : {}), ...headers };
   try {
     const opts = { method, headers: h, body, signal: ctrl.signal, redirect: 'manual' };
-    if (px) opts.dispatcher = undefined; // fetch has no proxy support; see tunnel() below
-    if (px) return await tunnel(url, opts, px);
+    // fetch() has no proxy support: the tunnel path must also feed the cookie jar,
+    // otherwise the session cookies from a proxied signup are silently dropped.
+    if (px) {
+      const out = await tunnel(url, opts, px);
+      if (jar) jar.absorb(out.headers);
+      return out;
+    }
     const r = await fetch(url, opts);
     const text = await r.text();
     const hdrs = {};
@@ -267,10 +273,16 @@ async function mailtrapBox(px, token) {
 async function makeMailbox(px) {
   const mt = mailtrapToken();
   if (mt) {
+    // Mail providers are not the panel: when the exit cannot reach them, ask
+    // directly instead of failing the account.
     try {
       return await mailtrapBox(px, mt);
     } catch (e) {
-      /* fall through to the public rails */
+      try {
+        return await mailtrapBox(null, mt);
+      } catch (e2) {
+        /* fall through to the public rails */
+      }
     }
   }
   for (const [name, api] of [
@@ -399,7 +411,7 @@ async function tzFor(px) {
 }
 
 /** One account end to end. Returns { key, steps }. */
-async function mintOne({ px, index, total, log }) {
+async function mintOne({ px, pool, index, total, log }) {
   const jar = new Jar();
   const steps = {};
   const mail = await makeMailbox(px);
@@ -418,13 +430,24 @@ async function mintOne({ px, index, total, log }) {
   log(`   precheck ${pre.status} · human check ${needsHuman ? 'required' : 'no'}`);
   let res = null;
   let session = false;
+  let refusal = '';
+  let askedHuman = needsHuman;
   if (!needsHuman) {
     res = await submitSignup({ px, jar, ids, fp, tz, email: mail.address, password });
     session = jar.keys().some((k) => /^sb-auth-auth-token/.test(k));
     steps.signup = res.status;
-    if (!session && /human check|needCaptcha/i.test(res.text)) {
-      log('   panel asked for a human check — replaying the signup in Chrome');
+    refusal = (String(res.text).match(/"error":"([^"]{0,140})"/) || [])[1] || '';
+    // Next.js flight answers with references ("error":"$17"); resolve the row.
+    const ref = /^\$(\d+)$/.exec(refusal);
+    if (ref) {
+      const row = new RegExp('(?:^|[\s,{])' + ref[1] + ':\{"error":"([^"]{0,160})').exec(String(res.text));
+      refusal = (row && row[1]) || `reference ${refusal}`;
     }
+    askedHuman = /human check|needCaptcha/i.test(res.text);
+    if (!session && askedHuman) log('   panel asked for a human check — replaying the signup in Chrome');
+    // A plain refusal ("too many sign-ups from this network", e-mail already used)
+    // is not a captcha problem: the browser cannot help, so say what the panel said.
+    if (!session && !askedHuman) throw new Error(`signup refused: ${refusal || `status ${res.status}`} | ${String(res.text).replace(/\s+/g, ' ').slice(0, 120)}`);
   }
   if (!session) {
     // Browser fallback: the widget's token and the session come from a real page.
@@ -480,13 +503,34 @@ async function mintOne({ px, index, total, log }) {
   for (const q of ['Reply with exactly: PONG', 'What is 17+25? Reply with the number only.']) {
     let ok = false;
     for (const model of [FREE_MODEL, FREE_FALLBACK]) {
-      const c = await req(`${BASE}/v1/chat/completions`, {
-        px,
-        method: 'POST',
-        headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
-        timeoutMs: 120000,
-      });
+      // The key already exists from here on, so the live gate never throws the
+      // account away: a dead exit is retried on other lines, and a 429 names its
+      // own wait time. The last attempt runs direct (a read-only chat call).
+      let c = null;
+      for (let t = 0; t < 5 && !c; t++) {
+        try {
+          c = await req(`${BASE}/v1/chat/completions`, {
+            px: t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
+            method: 'POST',
+            headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
+            timeoutMs: 120000,
+          });
+        } catch (e) {
+          if (t === 4) throw e;
+          continue;
+        }
+        if (c.status === 429) {
+          const wait = Math.max(20, Number((c.text.match(/in (\d+) s/) || [])[1] || 20));
+          log(`   rate limited — waiting ${wait}s`);
+          await sleep(wait * 1000);
+          c = null;
+        }
+      }
+      if (!c) {
+        fs.appendFileSync('keys-unverified.txt', key + ' ' + mail.address + '\n');
+        throw new Error('chat gate: still rate limited — key saved to keys-unverified.txt');
+      }
       const j = (() => {
         try {
           return JSON.parse(c.text);
@@ -502,7 +546,10 @@ async function mintOne({ px, index, total, log }) {
       }
       steps.lastChat = `${c.status} ${c.text.slice(0, 90)}`;
     }
-    if (!ok) throw new Error(`chat-200 failed: ${steps.lastChat}`);
+    if (!ok) {
+      fs.appendFileSync('keys-unverified.txt', key + ' ' + mail.address + '\n');
+      throw new Error(`chat-200 failed: ${steps.lastChat} — key saved to keys-unverified.txt`);
+    }
   }
   if (answers[0] === answers[1]) throw new Error('chat answered the same text to two different prompts');
   return { key, email: mail.address, steps };
@@ -600,8 +647,23 @@ async function verifyKeys(px, log) {
   if (!fs.existsSync('proxies.txt') && !arg('pool', null)) log('proxy: direct (no proxies.txt, no --pool)');
   let minted = 0;
   for (let i = 1; i <= count; i++) {
+    let r = null;
+    let lastErr = null;
+    // A pool line can die (or start demanding auth) between two requests: retry
+    // the same account on other exits instead of losing the slot.
+    for (let attempt = 1; attempt <= Math.max(1, Math.min(12, (px || []).length || 1)); attempt++) {
+      try {
+        r = await mintOne({ px: one() || null, pool: px, index: i, total: count, log });
+        break;
+      } catch (e) {
+        lastErr = e;
+        const retryable = /proxy CONNECT|ECONNRESET|socket hang up|ETIMEDOUT|EAI_AGAIN|tz unreadable|create another account from this network|Too many sign-ups|signup refused: status 200/i.test(e.message);
+        if (!retryable || !px) break;
+        log(`   exit failed (${e.message.slice(0, 60)}) — retrying on another exit`);
+      }
+    }
     try {
-      const r = await mintOne({ px: one() || null, index: i, total: count, log });
+      if (!r) throw lastErr || new Error('mint failed');
       const known = keysFile();
       if (!known.includes(r.key)) fs.appendFileSync(OUT, r.key + '\n');
       fs.appendFileSync('accounts.jsonl', JSON.stringify({ at: new Date().toISOString(), email: r.email, key_last4: r.key.slice(-4), steps: r.steps }) + '\n');

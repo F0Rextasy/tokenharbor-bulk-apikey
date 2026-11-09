@@ -33,7 +33,7 @@ desechables públicos, así que la CLI necesita un buzón que pueda leer:
 Ese es el único paso de configuración. Todo lo demás — la bandeja de entrada por cuenta, el enlace de
 verificación, el consentimiento de modelos gratuitos, la clave — es automático.
 
-## Lo que obtienes
+## Qué obtienes
 
 | campo | valor |
 |---|---|
@@ -90,13 +90,13 @@ por cuenta con los resultados de cada paso, sin secretos más allá del correo d
    un redespliegue del panel no rompe la CLI. La huella del dispositivo y la zona horaria viajan
    con la solicitud; la zona horaria se mide desde tu salida, no desde tu máquina.
 3. **Verificación humana** — un dominio de correo desechable hace que el panel responda "complete the human check"
-   (y ni siquiera renderiza el widget allí), así que un host de correo entrante real es el camino que
+   (y ni siquiera renderiza el widget allí), así que un host de correo entrante real es el riel que
    funciona. Cuando *sí* se renderiza un widget, el registro se
-   reproduce en un Chrome real (`src/solver.js`, `puppeteer-core` + el Chrome que ya está en tu
+   reproduce en un Chrome real (`src/solver.js`, `puppeteer-core` + el Chrome que ya tienes en tu
    máquina): el formulario se escribe con teclas reales, la casilla de Turnstile se marca con el
    ratón, y las cookies de sesión se devuelven a la CLI.
 4. **Verificación por correo** — se abre el enlace del buzón (el token se consume
-   en el servidor y responde con un `307` a `?verify=success`).
+   del lado del servidor y responde un `307` a `?verify=success`).
 5. **Consentimiento de modelos gratuitos** — el interruptor de compartir datos se activa con el texto de consentimiento que
    muestra el panel (`src/consent-text.txt`). Sin él, cada llamada `:free` responde
    `403 free_models_disabled`.
@@ -148,8 +148,8 @@ node src/connect-9router.js    --base http://localhost:8080 --password 123456
 node src/connect-omniroute.js  --base http://localhost:20128 --password 123456
 ```
 
-Cada uno crea un nodo de proveedor `openai-compatible` (`tokenharbor`) con la URL base
-`https://tokenharbor.ai/v1` y una conexión por clave, de modo que el router balancea la carga entre
+Cada uno crea un nodo de proveedor `openai-compatible` (`tokenharbor`) con URL base
+`https://tokenharbor.ai/v1` y una conexión por clave, así que el router balancea la carga entre
 tus claves. El menú del lanzador expone las mismas dos acciones.
 
 ## Notas
@@ -165,4 +165,4 @@ tus claves. El menú del lanzador expone las mismas dos acciones.
 
 ## Licencia
 
-MIT — ver [LICENSE](LICENSE).
+MIT — consulta [LICENSE](LICENSE).
