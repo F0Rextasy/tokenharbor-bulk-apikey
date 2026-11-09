@@ -20,7 +20,7 @@
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 
-[🛠 Início rápido](#-quick-start) · [🎁 Plano gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-4-of-them) · [🧪 Usar a API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Como funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Opções](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
+[🛠 Início rápido](#-quick-start) · [🎁 Nível gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-4-of-them) · [🧪 Use a API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Como funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Opções](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
 
 </div>
 
@@ -34,21 +34,21 @@
 
 ## ✨ Por que isto existe
 
-O Token Harbor é um painel Next.js (autenticação via Supabase) cujo plano gratuito é **baseado em porcentagem**: uma
+O Token Harbor é um painel Next.js (autenticação Supabase) cujo nível gratuito é **baseado em porcentagem**: uma
 **janela pessoal de 7 dias** começa com sua primeira requisição gratuita e consome uma fração do
 preço de tabela, não uma contagem fixa de requisições. O cadastro é e-mail + senha com um **widget
-Cloudflare Turnstile** e um limite por rede — uma rede significa uma conta — então uma execução em massa é,
-na prática, "uma saída nova por conta".
+Cloudflare Turnstile** e um limite por rede — uma rede significa uma conta — então uma execução em massa é
+na verdade "uma saída nova por conta".
 
-Dois portões ficam após o cadastro e ambos são fáceis de passar despercebidos: a API responde
+Dois portões ficam após o cadastro e ambos são fáceis de perder: a API responde
 `403 email_verification_required` até que o link do e-mail de cadastro seja aberto, e toda
-rota `:free` responde `403 free_models_disabled` até que o consentimento de modelos gratuitos seja ativado —
-e esse endpoint de consentimento **valida o texto que o cliente exibiu** (`shown_text`), então um
-`{"free_models_enabled":true}` puro responde `400 reload_and_retry`. Esta CLI faz tudo isso,
+rota `:free` responde `403 free_models_disabled` até que o consentimento para modelos gratuitos seja ativado —
+e esse endpoint de consentimento **valida o texto que o cliente exibiu** (`shown_text`), então um simples
+`{"free_models_enabled":true}` responde `400 reload_and_retry`. Esta CLI faz tudo isso,
 lê os ids de ação do Next.js da página ao vivo em cada execução, e só grava chaves que passam
 em um chat-200 ao vivo.
 
-## 🎁 Plano gratuito — quanto você recebe
+## 🎁 Nível gratuito — quanto você recebe
 
 | O quê | Valor |
 | --- | --- |
@@ -56,14 +56,14 @@ em um chat-200 ao vivo.
 | Cota | **porcentagem do preço de tabela**, sem contagem fixa de requisições (medido: ainda `0%` após ~25 chamadas) |
 | Janela | **7 dias pessoais**, começa com sua primeira requisição gratuita (cabeçalho `x-th-free-resets`) |
 | Limite de taxa da conta | **60 req/min**, **1.800 req/h** |
-| Limite de taxa por IP | **100 req/min**, **3.000 req/h** (acima da taxa responde `429` com o tempo de espera) |
+| Limite de taxa por IP | **100 req/min**, **3.000 req/h** (acima da taxa responde `429`, ou HTTP `200` com um corpo `error`, e informa o tempo de espera) |
 | Concorrência | sem limite |
 | Modelos pagos | 70+ (Claude, Grok, GLM, MiMo Pro …) — precisam de créditos; uma conta com saldo zero responde `402` |
 | Cartão obrigatório | **Não** |
 | Telefone obrigatório | **Não** |
 | Captcha | **Cloudflare Turnstile** no cadastro — `src/solver.js` gera um token real em um Chrome fora da tela pela mesma saída |
-| Verificação de e-mail | **obrigatória** — a CLI abre o link e segue o `307` até `?verify=success` |
-| A unidade que escala | **uma conta = uma chave** → `--count N` é, na prática, "N contas de N redes" |
+| Verificação de e-mail | **obrigatória** — a CLI abre o link e segue o `307` para `?verify=success` |
+| A unidade que escala | **uma conta = uma chave** → `--count N` é na verdade "N contas de N redes" |
 
 Cabeçalhos que vale registrar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
 `x-th-upstream-model`, `x-th-route-decision`.
@@ -79,7 +79,7 @@ Cabeçalhos que vale registrar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-re
 
 O endpoint serve **78 ids de modelo** no total (`GET /v1/models` com qualquer chave válida); os quatro
 acima são os que funcionam sem créditos. Ferramentas/chamada de função funcionam nas rotas gratuitas:
-um schema `get_time` volta como um array `tool_calls` real.
+um schema `get_time` retorna como um array `tool_calls` real.
 
 ## 🧪 Como usar a API
 
@@ -121,14 +121,14 @@ npm start            # menu → 1) Mint keys → how many → done
 ```
 
 > **Sem `mailtrap.txt` a criação não funciona de jeito nenhum.** O Token Harbor recusa todo domínio de
-> caixa de correio público, então nada consegue ler o link de verificação e toda conta travaria em
-> `403 email_verification_required`. Não há fallback: obtenha um token gratuito primeiro.
+> caixa postal pública, então nada consegue ler o link de verificação e toda conta travaria em
+> `403 email_verification_required`. Não há alternativa: obtenha um token gratuito primeiro.
 
 **O token do Mailtrap é o único passo de configuração.** O Token Harbor
 aceita um domínio de e-mail que pareça um host real de e-mail de entrada e responde "complete the human
 check" para domínios descartáveis públicos (para esses ele nem renderiza o widget), então a CLI
-precisa de uma caixa de correio que consiga ler. O plano gratuito basta: crie uma conta em
-[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, então grave esse valor em
+precisa de uma caixa postal que consiga ler. O nível gratuito é suficiente: crie uma conta em
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, depois grave esse valor em
 `mailtrap.txt` ao lado de `package.json` (uma linha), ou exporte `MAILTRAP_TOKEN`. O launcher
 verifica isso e avisa se estiver faltando — ele nunca pede o valor em si.
 
@@ -140,7 +140,7 @@ barreira de verificação humana do painel — é por isso que o arquivo é obri
 Uma chave só é gravada em `keys.txt` depois que, no momento da criação:
 
 - um `chat-200` ao vivo em um modelo `:free`, e
-- **dois prompts diferentes** respondendo 200 com conteúdo não vazio e **diferente**.
+- **dois prompts diferentes** respondem 200 com conteúdo não vazio e **diferente**.
 
 Medido de ponta a ponta (`node src/cli.js --auto --count 1 --pool proxies.txt`):
 
@@ -161,8 +161,8 @@ limite de taxa) vai para `keys-unverified.txt` para que a conta nunca seja perdi
 
 ## 🧭 Como funciona
 
-1. **Caixa de correio** — uma caixa de entrada nova por conta na sua conta Mailtrap (`mailtrap.txt`); mail.tm / mail.gw
-   públicos são os trilhos de fallback.
+1. **Caixa postal** — uma caixa de entrada nova por conta na sua conta Mailtrap (`mailtrap.txt`); mail.tm / mail.gw públicos são os
+   trilhos de fallback.
 2. **Cadastro** — os ids de ação do servidor Next.js (`next-action`, `$ACTION_KEY`,
    `x-deployment-id`) são lidos da página ao vivo em cada execução, então um redeploy do painel não quebra
    a CLI; a impressão digital do dispositivo e o fuso horário viajam com a requisição, e o fuso horário é
@@ -170,10 +170,10 @@ limite de taxa) vai para `keys-unverified.txt` para que a conta nunca seja perdi
 3. **Verificação humana** — quando o painel renderiza o widget, o cadastro é reproduzido em um Chrome real
    (`src/solver.js`, `puppeteer-core` + o Chrome já instalado; `--enable-automation` é
    suprimido de propósito), a caixa de seleção é clicada com o mouse, e os cookies de sessão desse navegador
-   são repassados para a CLI.
-4. **Verificação de e-mail** — o link da caixa de correio é aberto; o token é consumido
+   são devolvidos à CLI.
+4. **Verificação de e-mail** — o link da caixa postal é aberto; o token é consumido
    no servidor e responde `307 → /dashboard?verify=success`.
-5. **Consentimento de modelos gratuitos** — `POST /api/me/privacy` com o texto de consentimento que o painel exibe
+5. **Consentimento para modelos gratuitos** — `POST /api/me/privacy` com o texto de consentimento que o painel exibe
    (`src/consent-text.txt`), `screen: "consent_modal"`, `path: "/dashboard"`.
 6. **Chave + portão ao vivo** — `POST /api/keys`, então dois prompts diferentes devem ambos responder 200 com
    conteúdo diferente antes que a chave seja gravada.
@@ -193,19 +193,19 @@ node src/cli.js --help
 | --- | --- |
 | `--count <n>` | contas (e chaves) a criar, padrão 1 |
 | `--pool <file>` | lista de proxies, uma saída por linha (`http://host:port`, `socks5://user:pass@host:port`, `host:port`); comentários inline com `#` são permitidos |
-| `--headless` | executar o navegador de fallback sem interface (padrão: janela fora da tela, que é o que o captcha espera) |
-| `--screen` | testar o pool contra o painel e imprimir vivo/morto por saída |
-| `--verify` | verificar ao vivo `keys.txt`; chaves mortas são gravadas em `keys-dead.txt` |
-| `--models` | imprimir os ids dos modelos gratuitos |
-| `--strict-proxy` | nunca enviar uma requisição direta: o portão ao vivo também deve passar pelo pool (env `TOKENHARBOR_STRICT=1` faz o mesmo) |
+| `--headless` | executa o navegador de fallback em modo headless (padrão: janela fora da tela, que é o que o captcha espera) |
+| `--screen` | testa o pool contra o painel e imprime vivo/morto por saída |
+| `--verify` | verifica ao vivo `keys.txt`; chaves mortas são gravadas em `keys-dead.txt` |
+| `--models` | imprime os ids dos modelos gratuitos |
+| `--strict-proxy` | nunca envia uma requisição direta: o portão ao vivo também deve passar pelo pool (a env `TOKENHARBOR_STRICT=1` faz o mesmo) |
 
 Uma saída que morre nunca custa uma conta: o cadastro e o portão ao vivo ambos tentam novamente em outras linhas do pool,
-e um `429` espera o tempo que o painel indica.
+e um limite de taxa (um `429`, ou um `200` cujo corpo carrega `rate_limit_exceeded`) espera o tempo que o painel informa.
 
 ## 🛰️ Atrás de um proxy
 
-A CLI roda **direto** por padrão. Coloque uma saída por linha em `proxies.txt` (o launcher a
-pega automaticamente) ou passe `--pool`:
+A CLI roda **direto** por padrão. Coloque uma saída por linha em `proxies.txt` (o launcher a pega
+automaticamente) ou passe `--pool`:
 
 ```text
 http://127.0.0.1:8080
@@ -215,7 +215,7 @@ socks5://user:pass@10.0.0.5:1080
 
 Opcional — recomendado em escala: o painel limita cadastros **por rede**, então uma saída nova
 por conta mantém uma execução maior saudável. O e-mail é lido diretamente da sua conta Mailtrap (um
-provedor de e-mail não é o painel), então uma saída lenta não pode quebrar a etapa da caixa de correio.
+provedor de e-mail não é o painel), então uma saída lenta não pode quebrar a etapa da caixa postal.
 
 ## 📄 Arquivos
 
@@ -229,7 +229,7 @@ provedor de e-mail não é o painel), então uma saída lenta não pode quebrar 
 | `proxies.txt` | lista de proxies opcional |
 | `src/cli.js` | a CLI de criação / verificação / triagem |
 | `src/launcher.js` | o menu (`npm start`) |
-| `src/solver.js` | a metade do navegador para o widget Turnstile |
+| `src/solver.js` | a parte do navegador para o widget Turnstile |
 | `src/consent-text.txt` | o texto de consentimento que o painel valida |
 | `src/connect-9router.js`, `src/connect-omniroute.js` | conectores de roteador |
 
@@ -256,9 +256,9 @@ itens de menu **6** e **7**, e `npm run 9router` / `npm run omniroute` fazem o m
 ## 🔑 O que uma chave te dá
 
 - os quatro modelos `:free` acima, a 60 req/min e 1.800 req/h por conta (100 req/min por IP);
-- uma cota baseada em porcentagem dentro de uma janela pessoal de 7 dias (`x-th-free-resets` te diz quando
+- uma cota baseada em porcentagem dentro de uma janela pessoal de 7 dias (`x-th-free-resets` informa quando
   ela reinicia);
-- `/v1/chat/completions` compatível com OpenAI com chamada de ferramentas, então qualquer SDK, CLI ou roteador OpenAI
+- `/v1/chat/completions` compatível com OpenAI com chamada de função, então qualquer SDK, CLI ou roteador OpenAI
   funciona mudando `base_url` para `https://tokenharbor.ai/v1`;
 - modelos pagos permanecem bloqueados até que a conta tenha créditos (`402` caso contrário).
 
@@ -266,7 +266,7 @@ itens de menu **6** e **7**, e `npm run 9router` / `npm run omniroute` fazem o m
 
 Abra uma issue com o comando, a etapa que falhou (a CLI imprime `precheck / signup /
 verify / consent / key / chat`) e a mensagem do próprio painel. Nunca cole uma chave de API completa — os
-últimos quatro caracteres bastam.
+últimos quatro caracteres são suficientes.
 
 ## 📄 Licença
 

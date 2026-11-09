@@ -11,7 +11,7 @@
 
 # tokenharbor-bulk-apikey
 
-**Crea cuentas de Token Harbor en masa con claves API generadas automáticamente — inferencia compatible con OpenAI (DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash) + conectores 9Router / OmniRoute.**
+**Crea cuentas de Token Harbor en masa con claves API autogeneradas — inferencia compatible con OpenAI (DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash) + conectores 9Router / OmniRoute.**
 
 [![Node](https://img.shields.io/badge/Node-%E2%89%A518-3DA639?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Dependencies](https://img.shields.io/badge/dependencies-1%20(browser%20only)-blue?style=for-the-badge)](#)
@@ -20,7 +20,7 @@
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 
-[🛠 Inicio rápido](#-quick-start) · [🎁 Nivel gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-4-of-them) · [🧪 Usar la API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Cómo funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Opciones](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
+[🛠 Inicio rápido](#-quick-start) · [🎁 Nivel gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-4-of-them) · [🧪 Usa la API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Cómo funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Opciones](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
 
 </div>
 
@@ -56,14 +56,14 @@ un chat-200 en vivo.
 | Asignación | **porcentaje del precio de lista**, sin número fijo de solicitudes (medido: aún `0%` tras ~25 llamadas) |
 | Ventana | **7 días personales**, comienza con tu primera solicitud gratuita (cabecera `x-th-free-resets`) |
 | Límite de tasa por cuenta | **60 req/min**, **1,800 req/h** |
-| Límite de tasa por IP | **100 req/min**, **3,000 req/h** (al superar la tasa responde `429` con el tiempo de espera) |
+| Límite de tasa por IP | **100 req/min**, **3,000 req/h** (por exceso de tasa responde `429`, o HTTP `200` con un cuerpo `error`, e indica el tiempo de espera) |
 | Concurrencia | sin límite |
-| Modelos de pago | 70+ (Claude, Grok, GLM, MiMo Pro …) — requieren créditos; una cuenta con saldo cero responde `402` |
+| Modelos de pago | 70+ (Claude, Grok, GLM, MiMo Pro …) — necesitan créditos; una cuenta con saldo cero responde `402` |
 | Tarjeta requerida | **No** |
 | Teléfono requerido | **No** |
 | Captcha | **Cloudflare Turnstile** en el registro — `src/solver.js` genera un token real en un Chrome fuera de pantalla a través de la misma salida |
-| Verificación por correo | **requerida** — la CLI abre el enlace y sigue el `307` a `?verify=success` |
-| La unidad que escala | **una cuenta = una clave** → `--count N` es en realidad "N cuentas desde N redes" |
+| Verificación de correo | **requerida** — la CLI abre el enlace y sigue el `307` a `?verify=success` |
+| La unidad que escala | **una cuenta = una clave** → `--count N` es en realidad "N cuentas de N redes" |
 
 Cabeceras que vale la pena registrar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
 `x-th-upstream-model`, `x-th-route-decision`.
@@ -132,7 +132,7 @@ necesita un buzón que pueda leer. El nivel gratuito es suficiente: crea una cue
 `mailtrap.txt` junto a `package.json` (una línea), o exporta `MAILTRAP_TOKEN`. El lanzador
 lo comprueba y te avisa si falta — nunca pide el valor en sí.
 
-Sin el token la CLI aún intenta primero los raíles de correo públicos, y cada cuenta se detiene en
+Sin el token la CLI aún intenta primero los servicios de correo públicos, y cada cuenta se detiene en
 el muro de verificación humana del panel — por eso el archivo es obligatorio, no opcional.
 
 ## ✅ Verificado funcionando — cada clave se prueba
@@ -156,22 +156,22 @@ done
 ```
 
 Vuelve a comprobar en cualquier momento con `npm start` → **2) Verify keys** (`node src/cli.js --verify`); las claves
-muertas pasan a `keys-dead.txt`, una clave cuya puerta en vivo no pudo completarse (p. ej. la red alcanzó un
+muertas se mueven a `keys-dead.txt`, una clave cuya puerta en vivo no pudo completarse (p. ej. la red alcanzó un
 límite de tasa) termina en `keys-unverified.txt` para que la cuenta nunca se pierda.
 
 ## 🧭 Cómo funciona
 
-1. **Buzón** — una bandeja de entrada nueva por cuenta en tu cuenta de Mailtrap (`mailtrap.txt`); los
-   mail.tm / mail.gw públicos son los raíles de respaldo.
+1. **Buzón** — una bandeja de entrada nueva por cuenta en tu cuenta de Mailtrap (`mailtrap.txt`); mail.tm / mail.gw públicos son
+   los servicios de respaldo.
 2. **Registro** — los ids de acción del servidor de Next.js (`next-action`, `$ACTION_KEY`,
    `x-deployment-id`) se leen de la página en vivo en cada ejecución, así que un redespliegue del panel no rompe
    la CLI; la huella del dispositivo y la zona horaria viajan con la solicitud, y la zona horaria se
    mide desde la salida, no desde tu máquina.
 3. **Verificación humana** — cuando el panel renderiza el widget, el registro se reproduce en un Chrome real
    (`src/solver.js`, `puppeteer-core` + el Chrome ya instalado; `--enable-automation` se
-   suprime a propósito), se hace clic en la casilla con el ratón, y las cookies de sesión de ese navegador se devuelven
+   suprime a propósito), la casilla se marca con el ratón, y las cookies de sesión de ese navegador se devuelven
    a la CLI.
-4. **Verificación por correo** — se abre el enlace del buzón; el token se consume
+4. **Verificación de correo** — se abre el enlace del buzón; el token se consume
    en el servidor y responde `307 → /dashboard?verify=success`.
 5. **Consentimiento de modelos gratuitos** — `POST /api/me/privacy` con el texto de consentimiento que muestra el panel
    (`src/consent-text.txt`), `screen: "consent_modal"`, `path: "/dashboard"`.
@@ -196,16 +196,16 @@ node src/cli.js --help
 | `--headless` | ejecutar el navegador de respaldo en modo headless (por defecto: ventana fuera de pantalla, que es lo que espera el captcha) |
 | `--screen` | probar el pool contra el panel e imprimir vivo/muerto por salida |
 | `--verify` | verificar en vivo `keys.txt`; las claves muertas se escriben en `keys-dead.txt` |
-| `--models` | imprimir los ids de modelos gratuitos |
+| `--models` | imprimir los ids de los modelos gratuitos |
 | `--strict-proxy` | nunca enviar una solicitud directa: la puerta en vivo también debe pasar por el pool (la variable de entorno `TOKENHARBOR_STRICT=1` hace lo mismo) |
 
 Una salida que falla nunca cuesta una cuenta: el registro y la puerta en vivo reintentan en otras líneas del pool,
-y un `429` espera el tiempo que indica el panel.
+y un límite de tasa (un `429`, o un `200` cuyo cuerpo lleva `rate_limit_exceeded`) espera el tiempo que indica el panel.
 
 ## 🛰️ Detrás de un proxy
 
-La CLI se ejecuta **directamente** por defecto. Pon una salida por línea en `proxies.txt` (el lanzador la toma
-automáticamente) o pasa `--pool`:
+La CLI se ejecuta **directamente** por defecto. Pon una salida por línea en `proxies.txt` (el lanzador la
+toma automáticamente) o pasa `--pool`:
 
 ```text
 http://127.0.0.1:8080
@@ -229,7 +229,7 @@ proveedor de correo no es el panel), así que una salida lenta no puede romper e
 | `proxies.txt` | lista de proxies opcional |
 | `src/cli.js` | la CLI de creación / verificación / sondeo |
 | `src/launcher.js` | el menú (`npm start`) |
-| `src/solver.js` | la mitad del navegador para el widget de Turnstile |
+| `src/solver.js` | la parte del navegador para el widget de Turnstile |
 | `src/consent-text.txt` | el texto de consentimiento que valida el panel |
 | `src/connect-9router.js`, `src/connect-omniroute.js` | conectores de router |
 
@@ -242,7 +242,7 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 Registra un nodo de proveedor `openai-compatible` (`tokenharbor`, URL base
 `https://tokenharbor.ai/v1`) y una conexión por clave en `keys.txt`, así que 9Router equilibra la carga
 entre tus claves. Idempotente: un nodo o conexión existente se reutiliza, y la numeración continúa
-desde el `tokenharbor-0NN` más alto que ya esté allí.
+desde el `tokenharbor-0NN` más alto que ya exista.
 
 ## 🔌 Conectar con OmniRoute
 
@@ -265,10 +265,10 @@ elementos del menú **6** y **7**, y `npm run 9router` / `npm run omniroute` hac
 ## 🐞 Problemas
 
 Abre un issue con el comando, el paso que falló (la CLI imprime `precheck / signup /
-verify / consent / key / chat`) y el mensaje propio del panel. Nunca pegues una clave API completa — los
+verify / consent / key / chat`) y el mensaje del propio panel. Nunca pegues una clave API completa — los
 últimos cuatro caracteres son suficientes.
 
 ## 📄 Licencia
 
-MIT — ver [LICENSE](LICENSE). La herramienta no está afiliada con Token Harbor; úsala para cuentas
+MIT — consulta [LICENSE](LICENSE). La herramienta no está afiliada con Token Harbor; úsala para cuentas
 que poseas y respeta los términos del panel.

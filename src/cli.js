@@ -540,7 +540,10 @@ async function mintOne({ px, pool, index, total, log }) {
             if (t === 5) throw e;
             continue;
           }
-          if (c.status === 429) {
+          // The panel also answers a rate limit with HTTP 200 + {"error":{"code":"rate_limit_exceeded","message":"… in N s."}}
+          // (measured 2026-11-09), so a status check alone burns every retry on an exhausted window.
+          const limited = c.status === 429 || (c.status === 200 && /"code"\s*:\s*"rate_limit_exceeded"/.test(c.text));
+          if (limited) {
             const wait = Math.max(25, Number((c.text.match(/in (\d+) s/) || [])[1] || 25));
             log(`   rate limited — waiting ${wait}s`);
             await sleep(wait * 1000);

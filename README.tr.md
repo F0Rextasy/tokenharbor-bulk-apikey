@@ -20,7 +20,7 @@
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 
-[🛠 Hızlı başlangıç](#-quick-start) · [🎁 Ücretsiz katman](#-free-tier--how-much-you-get) · [🤖 Modeller](#-models--all-4-of-them) · [🧪 API'yi kullanın](#-how-to-use-the-api) · [✅ Doğrulandı](#-verified-working--every-key-is-tested) · [🧭 Nasıl çalışır](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Seçenekler](#️-cli-options) · [🛰️ Proxy'ler](#️-behind-a-proxy) · [🐞 Sorunlar](#-issues)
+[🛠 Hızlı başlangıç](#-quick-start) · [🎁 Ücretsiz katman](#-free-tier--how-much-you-get) · [🤖 Modeller](#-models--all-4-of-them) · [🧪 API'yi kullanma](#-how-to-use-the-api) · [✅ Doğrulandı](#-verified-working--every-key-is-tested) · [🧭 Nasıl çalışır](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Seçenekler](#️-cli-options) · [🛰️ Proxy'ler](#️-behind-a-proxy) · [🐞 Sorunlar](#-issues)
 
 </div>
 
@@ -34,9 +34,9 @@
 
 ## ✨ Bu neden var
 
-Token Harbor, ücretsiz katmanı **yüzde tabanlı** olan bir Next.js panelidir (Supabase kimlik doğrulaması): kişisel bir **7 günlük pencere** ilk ücretsiz isteğinizle başlar ve sabit bir istek sayısı yerine liste fiyatının bir payını tüketir. Kayıt, e-posta + parola ile **Cloudflare Turnstile widget'ı** ve ağ başına bir sınırla yapılır — bir ağ bir hesap demektir — yani toplu bir çalıştırma aslında "hesap başına bir taze çıkış" demektir.
+Token Harbor, ücretsiz katmanı **yüzde tabanlı** olan bir Next.js panelidir (Supabase kimlik doğrulaması): kişisel bir **7 günlük pencere** ilk ücretsiz isteğinizle başlar ve sabit bir istek sayısı yerine liste fiyatının bir payını tüketir. Kayıt, e-posta + parola ve bir **Cloudflare Turnstile bileşeni** ile ağ başına bir sınırla yapılır — bir ağ bir hesap demektir — yani toplu bir çalıştırma aslında "hesap başına bir taze çıkış" demektir.
 
-Kayıttan sonra iki kapı vardır ve ikisi de kolayca gözden kaçar: API, kayıt e-postasındaki bağlantı açılana kadar `403 email_verification_required` yanıtı verir ve her `:free` rotası, ücretsiz modeller onayı etkinleştirilene kadar `403 free_models_disabled` yanıtı verir — ve bu onay uç noktası **istemcinin gösterdiği metni doğrular** (`shown_text`), bu yüzden çıplak bir `{"free_models_enabled":true}` yanıtı `400 reload_and_retry` verir. Bu CLI hepsini yapar, Next.js action kimliklerini her çalıştırmada canlı sayfadan okur ve yalnızca canlı bir chat-200'ü geçen anahtarları yazar.
+Kayıttan sonra iki kapı vardır ve ikisi de kolayca gözden kaçar: kayıt e-postasındaki bağlantı açılana kadar API `403 email_verification_required` yanıtı verir ve ücretsiz modeller onayı etkinleştirilene kadar her `:free` rotası `403 free_models_disabled` yanıtı verir — ve bu onay uç noktası **istemcinin gösterdiği metni doğrular** (`shown_text`), bu yüzden çıplak bir `{"free_models_enabled":true}` yanıtı `400 reload_and_retry` verir. Bu CLI hepsini yapar, Next.js action kimliklerini her çalıştırmada canlı sayfadan okur ve yalnızca canlı bir chat-200'ü geçen anahtarları yazar.
 
 ## 🎁 Ücretsiz katman — ne kadar alırsınız
 
@@ -46,13 +46,13 @@ Kayıttan sonra iki kapı vardır ve ikisi de kolayca gözden kaçar: API, kayı
 | Kota | **liste fiyatının yüzdesi**, sabit istek sayısı yok (ölçüldü: ~25 çağrıdan sonra hâlâ `0%`) |
 | Pencere | **kişisel 7 gün**, ilk ücretsiz isteğinizle başlar (`x-th-free-resets` başlığı) |
 | Hesap hız sınırı | **60 istek/dk**, **1.800 istek/sa** |
-| IP hız sınırı | **100 istek/dk**, **3.000 istek/sa** (aşırı hızda bekleme süresiyle `429` yanıtı) |
+| IP hız sınırı | **100 istek/dk**, **3.000 istek/sa** (aşırı hızda `429` veya gövdesinde `error` olan HTTP `200` yanıtı verir ve bekleme süresini belirtir) |
 | Eşzamanlılık | sınırlanmamış |
-| Ücretli modeller | 70+ (Claude, Grok, GLM, MiMo Pro …) — kredi gerektirir; sıfır bakiyeli hesap `402` yanıtı verir |
+| Ücretli modeller | 70+ (Claude, Grok, GLM, MiMo Pro …) — kredi gerektirir; sıfır bakiyeli bir hesap `402` yanıtı verir |
 | Kart gerekli | **Hayır** |
 | Telefon gerekli | **Hayır** |
 | Captcha | Kayıtta **Cloudflare Turnstile** — `src/solver.js` aynı çıkış üzerinden ekran dışı bir Chrome'da gerçek bir token üretir |
-| E-posta doğrulaması | **gerekli** — CLI bağlantıyı açar ve `?verify=success` adresine giden `307` yönlendirmesini izler |
+| E-posta doğrulaması | **gerekli** — CLI bağlantıyı açar ve `?verify=success` adresine `307` yönlendirmesini izler |
 | Ölçeklenen birim | **bir hesap = bir anahtar** → `--count N` aslında "N ağdan N hesap" demektir |
 
 Kaydetmeye değer başlıklar: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
@@ -106,18 +106,18 @@ echo "YOUR_MAILTRAP_TOKEN" > mailtrap.txt   # GEREKLİ — aşağıdaki uyarıya
 npm start            # menü → 1) Mint keys → kaç tane → bitti
 ```
 
-> **`mailtrap.txt` olmadan oluşturma hiç çalışamaz.** Token Harbor her genel posta kutusu alan adını reddeder, bu yüzden hiçbir şey doğrulama bağlantısını okuyamaz ve her hesap `403 email_verification_required` durumunda takılır. Yedek yok: önce ücretsiz bir token alın.
+> **`mailtrap.txt` olmadan oluşturma hiç çalışamaz.** Token Harbor her genel posta kutusu alan adını reddeder, bu yüzden hiçbir şey doğrulama bağlantısını okuyamaz ve her hesap `403 email_verification_required` hatasında takılır. Yedek yok: önce ücretsiz bir token alın.
 
-**Mailtrap token'ı tek kurulum adımıdır.** Token Harbor, gerçek bir gelen posta sunucusuna benzeyen bir posta alan adını kabul eder ve genel tek kullanımlık alan adlarına "complete the human check" yanıtı verir (onlar için widget'ı bile oluşturmaz), bu yüzden CLI'nin okuyabildiği bir posta kutusuna ihtiyacı vardır. Ücretsiz katman yeterlidir: [mailtrap.io](https://mailtrap.io) adresinde bir hesap oluşturun → **Settings → API Tokens**, ardından bu değeri `package.json` yanındaki `mailtrap.txt` dosyasına yazın (tek satır) veya `MAILTRAP_TOKEN` ortam değişkenini dışa aktarın. Başlatıcı bunu kontrol eder ve eksikse size söyler — değeri asla kendisi istemez.
+**Mailtrap token'ı tek kurulum adımıdır.** Token Harbor gerçek bir gelen posta sunucusuna benzeyen bir posta alan adını kabul eder ve genel tek kullanımlık alan adlarına "insan doğrulamasını tamamlayın" yanıtı verir (onlar için bileşeni hatta oluşturmaz), bu yüzden CLI'nin okuyabildiği bir posta kutusuna ihtiyacı vardır. Ücretsiz katman yeterlidir: [mailtrap.io](https://mailtrap.io) adresinde bir hesap oluşturun → **Settings → API Tokens**, ardından bu değeri `package.json` yanındaki `mailtrap.txt` dosyasına yazın (tek satır) veya `MAILTRAP_TOKEN` ortam değişkenini dışa aktarın. Başlatıcı bunu kontrol eder ve eksikse size söyler — değeri asla kendisi istemez.
 
-Token olmadan CLI yine de önce genel posta raylarını dener ve her hesap panelin insan doğrulama duvarında durur — bu yüzden dosya isteğe bağlı değil, zorunludur.
+Token olmadan CLI yine de önce genel posta raylarını dener ve her hesap panelin insan doğrulama duvarında durur — bu yüzden dosya isteğe bağlı değil, gereklidir.
 
 ## ✅ Doğrulandı — her anahtar test edilir
 
-Bir anahtar `keys.txt` dosyasına ancak oluşturma anında şunlar gerçekleştikten sonra yazılır:
+Bir anahtar `keys.txt` dosyasına ancak oluşturma sırasında şunlardan sonra yazılır:
 
-- bir `:free` model üzerinde canlı bir `chat-200`, ve
-- **iki farklı istem** 200 yanıtı verip boş olmayan ve **farklı** içerik döndürür.
+- bir `:free` modelde canlı `chat-200`, ve
+- **iki farklı istem** 200 yanıtı verip boş olmayan ve **farklı** içerik döndürdüğünde.
 
 Uçtan uca ölçüm (`node src/cli.js --auto --count 1 --pool proxies.txt`):
 
@@ -138,8 +138,8 @@ done
 
 1. **Posta kutusu** — Mailtrap hesabınızda hesap başına taze bir gelen kutusu (`mailtrap.txt`); genel mail.tm / mail.gw yedek raylardır.
 2. **Kayıt** — Next.js server-action kimlikleri (`next-action`, `$ACTION_KEY`,
-   `x-deployment-id`) her çalıştırmada canlı sayfadan okunur, böylece panelin yeniden dağıtımı CLI'yi bozmaz; cihaz parmak izi ve saat dilimi istekle birlikte gider ve saat dilimi makinenizden değil, çıkıştan ölçülür.
-3. **İnsan doğrulama** — panel widget'ı oluşturduğunda, kayıt gerçek bir Chrome'da yeniden oynatılır
+   `x-deployment-id`) her çalıştırmada canlı sayfadan okunur, böylece bir panel yeniden dağıtımı CLI'yi bozmaz; cihaz parmak izi ve saat dilimi istekle birlikte gider ve saat dilimi makinenizden değil çıkıştan ölçülür.
+3. **İnsan doğrulaması** — panel bileşeni oluşturduğunda, kayıt gerçek bir Chrome'da yeniden oynatılır
    (`src/solver.js`, `puppeteer-core` + zaten kurulu Chrome; `--enable-automation` kasıtlı olarak bastırılır), onay kutusuna fareyle tıklanır ve o tarayıcının oturum çerezleri CLI'ye geri verilir.
 4. **E-posta doğrulaması** — posta kutusundaki bağlantı açılır; token sunucu tarafında tüketilir ve `307 → /dashboard?verify=success` yanıtı verir.
 5. **Ücretsiz modeller onayı** — panonun gösterdiği onay metniyle (`src/consent-text.txt`) `POST /api/me/privacy`, `screen: "consent_modal"`, `path: "/dashboard"`.
@@ -150,7 +150,7 @@ done
 ```bash
 node src/cli.js --auto --count 5             # beş hesap → beş anahtar
 node src/cli.js --auto --count 5 --pool proxies.txt
-node src/cli.js --verify                     # keys.txt'yi canlı kontrol et, ölüler → keys-dead.txt
+node src/cli.js --verify                     # keys.txt dosyasını canlı kontrol et, ölüler → keys-dead.txt
 node src/cli.js --screen --pool proxies.txt  # hangi çıkışlar panele hiç ulaşabiliyor
 node src/cli.js --models                     # ücretsiz model listesi (bir anahtar gerektirir)
 node src/cli.js --help
@@ -160,17 +160,17 @@ node src/cli.js --help
 | --- | --- |
 | `--count <n>` | oluşturulacak hesap (ve anahtar) sayısı, varsayılan 1 |
 | `--pool <file>` | proxy listesi, satır başına bir çıkış (`http://host:port`, `socks5://user:pass@host:port`, `host:port`); satır içi `#` yorumları sorun değil |
-| `--headless` | yedek tarayıcıyı başsız çalıştır (varsayılan: kapalı, captcha'nın beklediği ekran dışı pencere) |
+| `--headless` | yedek tarayıcıyı başsız çalıştır (varsayılan: captcha'nın beklediği ekran dışı pencere) |
 | `--screen` | havuzu panele karşı test et ve her çıkış için canlı/ölü yazdır |
 | `--verify` | `keys.txt` dosyasını canlı doğrula; ölü anahtarlar `keys-dead.txt` dosyasına yazılır |
 | `--models` | ücretsiz model kimliklerini yazdır |
-| `--strict-proxy` | asla doğrudan istek gönderme: canlı kapı da havuzdan geçmeli (`TOKENHARBOR_STRICT=1` ortam değişkeni aynısını yapar) |
+| `--strict-proxy` | asla doğrudan istek gönderme: canlı kapı da havuzdan geçmelidir (`TOKENHARBOR_STRICT=1` ortam değişkeni aynısını yapar) |
 
-Ölen bir çıkış bir hesaba asla mal olmaz: kayıt ve canlı kapı ikisi de diğer havuz satırlarında yeniden dener ve bir `429`, panelin belirttiği süre kadar bekler.
+Ölen bir çıkış bir hesaba asla mal olmaz: kayıt ve canlı kapı ikisi de diğer havuz satırlarında yeniden dener ve bir hız sınırı (`429` veya gövdesinde `rate_limit_exceeded` taşıyan bir `200`) panelin belirttiği süre kadar bekler.
 
 ## 🛰️ Proxy arkasında
 
-CLI varsayılan olarak **doğrudan** çalışır. `proxies.txt` dosyasına satır başına bir çıkış koyun (başlatıcı bunu otomatik olarak alır) veya `--pool` ile geçin:
+CLI varsayılan olarak **doğrudan** çalışır. `proxies.txt` dosyasına satır başına bir çıkış koyun (başlatıcı bunu otomatik olarak alır) veya `--pool` geçin:
 
 ```text
 http://127.0.0.1:8080
@@ -178,21 +178,21 @@ socks5://user:pass@10.0.0.5:1080
 10.0.0.5:8080
 ```
 
-İsteğe bağlı — ölçekte önerilir: panel kayıtları **ağ başına** sınırlar, bu yüzden hesap başına bir taze çıkış daha büyük bir çalıştırmayı sağlıklı tutar. Posta doğrudan Mailtrap hesabınızdan okunur (bir posta sağlayıcısı panel değildir), bu yüzden yavaş bir çıkış posta kutusu adımını bozamaz.
+İsteğe bağlı — ölçekte önerilir: panel kayıtları **ağ başına** sınırlar, bu yüzden hesap başına bir taze çıkış daha büyük bir çalıştırmayı sağlıklı tutar. Posta doğrudan Mailtrap hesabınızdan okunur (posta sağlayıcısı panel değildir), bu yüzden yavaş bir çıkış posta kutusu adımını bozamaz.
 
 ## 📄 Dosyalar
 
 | Yol | Ne |
 | --- | --- |
 | `keys.txt` | doğrulanmış anahtarlar, satır başına bir tane (yalnızca canlı kapıdan sonra yazılır) |
-| `keys-dead.txt` | yanıt vermeyi bırakan anahtarlar (`--verify` ile) |
+| `keys-dead.txt` | yanıt vermeyi bırakan anahtarlar (`--verify` sonucu) |
 | `keys-unverified.txt` | canlı kapısı tamamlanamayan anahtarlar — hesap var, anahtar gerçek |
 | `accounts.jsonl` | hesap başına bir satır: e-posta + adım sonuçları |
 | `mailtrap.txt` | Mailtrap API token'ınız (tek satır) |
 | `proxies.txt` | isteğe bağlı proxy listesi |
 | `src/cli.js` | oluşturma / doğrulama / tarama CLI'si |
 | `src/launcher.js` | menü (`npm start`) |
-| `src/solver.js` | Turnstile widget'ı için tarayıcı tarafı |
+| `src/solver.js` | Turnstile bileşeni için tarayıcı tarafı |
 | `src/consent-text.txt` | panelin doğruladığı onay metni |
 | `src/connect-9router.js`, `src/connect-omniroute.js` | yönlendirici bağlayıcıları |
 
@@ -203,7 +203,7 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 Bir `openai-compatible` sağlayıcı düğümü (`tokenharbor`, temel URL
-`https://tokenharbor.ai/v1`) ve `keys.txt` içindeki her anahtar için bir bağlantı kaydeder, böylece 9Router anahtarlarınız arasında yük dengeler. Idempotent: mevcut bir düğüm veya bağlantı yeniden kullanılır ve numaralandırma orada zaten bulunan en yüksek `tokenharbor-0NN` değerinden devam eder.
+`https://tokenharbor.ai/v1`) ve `keys.txt` içindeki her anahtar için bir bağlantı kaydeder, böylece 9Router anahtarlarınız arasında yük dengeler. Idempotenttir: mevcut bir düğüm veya bağlantı yeniden kullanılır ve numaralandırma orada zaten bulunan en yüksek `tokenharbor-0NN` değerinden devam eder.
 
 ## 🔌 OmniRoute'a bağlan
 
@@ -215,9 +215,9 @@ OmniRoute için aynı yapı (sağlayıcı düğümü + anahtar başına bir bağ
 
 ## 🔑 Bir anahtar size ne kazandırır
 
-- yukarıdaki dört `:free` model, hesap başına 60 istek/dk ve 1.800 istek/sa hızında (IP başına 100 istek/dk);
-- kişisel 7 günlük pencere içinde yüzde tabanlı bir kota (`x-th-free-resets` ne zaman yenileneceğini söyler);
-- araç çağırmayı destekleyen OpenAI uyumlu `/v1/chat/completions`, böylece herhangi bir OpenAI SDK, CLI veya yönlendirici `base_url` değerini `https://tokenharbor.ai/v1` olarak değiştirerek çalışır;
+- yukarıdaki dört `:free` model, hesap başına 60 istek/dk ve 1.800 istek/sa (IP başına 100 istek/dk);
+- kişisel 7 günlük bir pencere içinde yüzde tabanlı bir kota (`x-th-free-resets` ne zaman yenileneceğini söyler);
+- araç çağırmalı OpenAI uyumlu `/v1/chat/completions`, böylece herhangi bir OpenAI SDK'sı, CLI'si veya yönlendiricisi `base_url` değerini `https://tokenharbor.ai/v1` olarak değiştirerek çalışır;
 - ücretli modeller hesabın kredisi olana kadar kilitli kalır (aksi halde `402`).
 
 ## 🐞 Sorunlar

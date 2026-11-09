@@ -56,7 +56,7 @@ a live chat-200.
 | Allowance | **percentage of list price**, no fixed request count (measured: still `0%` after ~25 calls) |
 | Window | **personal 7 days**, starts with your first free request (`x-th-free-resets` header) |
 | Account rate limit | **60 req/min**, **1,800 req/h** |
-| IP rate limit | **100 req/min**, **3,000 req/h** (over-rate answers `429` with the wait time) |
+| IP rate limit | **100 req/min**, **3,000 req/h** (over-rate answers `429`, or HTTP `200` with an `error` body, and names the wait time) |
 | Concurrency | not capped |
 | Paid models | 70+ (Claude, Grok, GLM, MiMo Pro …) — they need credits; a zero-balance account answers `402` |
 | Card required | **No** |
@@ -200,7 +200,7 @@ node src/cli.js --help
 | `--strict-proxy` | never send a direct request: the live gate must also go through the pool (env `TOKENHARBOR_STRICT=1` does the same) |
 
 A dying exit never costs an account: sign-up and the live gate both retry on other pool lines,
-and a `429` waits the time the panel names.
+and a rate limit (a `429`, or a `200` whose body carries `rate_limit_exceeded`) waits the time the panel names.
 
 ## 🛰️ Behind a proxy
 

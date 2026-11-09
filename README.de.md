@@ -11,7 +11,7 @@
 
 # tokenharbor-bulk-apikey
 
-**Token-Harbor-Konten im Massenverfahren erstellen mit automatisch generierten API-Schlüsseln — OpenAI-kompatible Inferenz (DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash) + 9Router-/OmniRoute-Connectoren.**
+**Token-Harbor-Konten im Massenverfahren erstellen mit automatisch generierten API-Schlüsseln — OpenAI-kompatible Inferenz (DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash) + 9Router-/OmniRoute-Konnektoren.**
 
 [![Node](https://img.shields.io/badge/Node-%E2%89%A518-3DA639?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Dependencies](https://img.shields.io/badge/dependencies-1%20(browser%20only)-blue?style=for-the-badge)](#)
@@ -20,7 +20,7 @@
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 
-[🛠 Schnellstart](#-quick-start) · [🎁 Kostenlose Stufe](#-free-tier--how-much-you-get) · [🤖 Modelle](#-models--all-4-of-them) · [🧪 API verwenden](#-how-to-use-the-api) · [✅ Verifiziert](#-verified-working--every-key-is-tested) · [🧭 So funktioniert es](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Optionen](#️-cli-options) · [🛰️ Proxys](#️-behind-a-proxy) · [🐞 Probleme](#-issues)
+[🛠 Schnellstart](#-quick-start) · [🎁 Kostenloser Tarif](#-free-tier--how-much-you-get) · [🤖 Modelle](#-models--all-4-of-them) · [🧪 API verwenden](#-how-to-use-the-api) · [✅ Verifiziert](#-verified-working--every-key-is-tested) · [🧭 Funktionsweise](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Optionen](#️-cli-options) · [🛰️ Proxys](#️-behind-a-proxy) · [🐞 Probleme](#-issues)
 
 </div>
 
@@ -34,38 +34,38 @@
 
 ## ✨ Warum es das gibt
 
-Token Harbor ist ein Next.js-Panel (Supabase-Auth), dessen kostenlose Stufe **prozentbasiert** ist: Ein
+Token Harbor ist ein Next.js-Panel (Supabase-Auth), dessen kostenloser Tarif **prozentbasiert** ist: Ein
 persönliches **7-Tage-Fenster** beginnt mit deiner ersten kostenlosen Anfrage und verbraucht einen Anteil des
-Listenpreises, nicht eine feste Anzahl an Anfragen. Die Registrierung erfolgt per E-Mail + Passwort mit einem **Cloudflare-
+Listenpreises, keine feste Anzahl an Anfragen. Die Registrierung erfolgt per E-Mail + Passwort mit einem **Cloudflare-
 Turnstile-Widget** und einem Limit pro Netzwerk — ein Netzwerk bedeutet ein Konto —, sodass ein Massenlauf
 eigentlich „ein frischer Exit pro Konto" ist.
 
-Nach der Registrierung liegen zwei Hürden, die beide leicht übersehen werden: Die API antwortet
+Nach der Registrierung gibt es zwei Hürden, und beide sind leicht zu übersehen: Die API antwortet
 `403 email_verification_required`, bis der Link aus der Registrierungs-E-Mail geöffnet wird, und jede
-`:free`-Route antwortet `403 free_models_disabled`, bis die Zustimmung zu den kostenlosen Modellen aktiviert ist —
-und dieser Zustimmungs-Endpunkt **validiert den Text, den der Client angezeigt hat** (`shown_text`), sodass ein bloßes
+`:free`-Route antwortet `403 free_models_disabled`, bis die Einwilligung zu den kostenlosen Modellen aktiviert ist —
+und dieser Einwilligungs-Endpunkt **validiert den Text, den der Client angezeigt hat** (`shown_text`), sodass ein bloßes
 `{"free_models_enabled":true}` mit `400 reload_and_retry` antwortet. Diese CLI erledigt all das,
 liest die Next.js-Action-IDs bei jedem Lauf aus der Live-Seite und schreibt nur Schlüssel, die einen
 Live-Chat-200 bestehen.
 
-## 🎁 Kostenlose Stufe — wie viel du bekommst
+## 🎁 Kostenloser Tarif — wie viel du bekommst
 
 | Was | Wert |
 | --- | --- |
 | Kostenlose Modelle | **4** — DeepSeek V4.1 Flash, DeepSeek V4 Flash, MiMo V2.5, MiMo V2.6 Flash (Suffix `:free`) |
 | Kontingent | **Prozentsatz des Listenpreises**, keine feste Anzahl an Anfragen (gemessen: nach ~25 Aufrufen noch `0%`) |
 | Fenster | **persönliche 7 Tage**, beginnt mit deiner ersten kostenlosen Anfrage (Header `x-th-free-resets`) |
-| Konten-Ratenlimit | **60 Anf./min**, **1.800 Anf./h** |
-| IP-Ratenlimit | **100 Anf./min**, **3.000 Anf./h** (bei Überschreitung antwortet `429` mit der Wartezeit) |
+| Ratenlimit pro Konto | **60 Anf./min**, **1.800 Anf./h** |
+| Ratenlimit pro IP | **100 Anf./min**, **3.000 Anf./h** (bei Überschreitung antwortet es mit `429` oder HTTP `200` mit einem `error`-Body und nennt die Wartezeit) |
 | Parallelität | nicht begrenzt |
-| Kostenpflichtige Modelle | 70+ (Claude, Grok, GLM, MiMo Pro …) — sie benötigen Guthaben; ein Konto mit Nullsaldo antwortet `402` |
+| Kostenpflichtige Modelle | 70+ (Claude, Grok, GLM, MiMo Pro …) — sie benötigen Guthaben; ein Konto mit Nullguthaben antwortet mit `402` |
 | Karte erforderlich | **Nein** |
 | Telefon erforderlich | **Nein** |
 | Captcha | **Cloudflare Turnstile** bei der Registrierung — `src/solver.js` erzeugt ein echtes Token in einem unsichtbaren Chrome über denselben Exit |
 | E-Mail-Verifizierung | **erforderlich** — die CLI öffnet den Link und folgt dem `307` zu `?verify=success` |
-| Die Einheit, die skaliert | **ein Konto = ein Schlüssel** → `--count N` bedeutet wirklich „N Konten aus N Netzwerken" |
+| Die Einheit, die skaliert | **ein Konto = ein Schlüssel** → `--count N` bedeutet eigentlich „N Konten aus N Netzwerken" |
 
-Erwähnenswerte Header zum Protokollieren: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
+Protokollierenswerte Header: `x-th-plan`, `x-th-free-used-pct`, `x-th-free-resets`,
 `x-th-upstream-model`, `x-th-route-decision`.
 
 ## 🤖 Modelle — alle 4
@@ -73,7 +73,7 @@ Erwähnenswerte Header zum Protokollieren: `x-th-plan`, `x-th-free-used-pct`, `x
 | Modell-ID | Hinweise |
 | --- | --- |
 | `deepseek-v4.1-flash:free` | der Standard; antwortet mit PONG in ~9-11 s |
-| `deepseek-v4-flash:free` | Fallback-Modell, das die CLI ebenfalls im Live-Gate versucht |
+| `deepseek-v4-flash:free` | Fallback-Modell, das die CLI im Live-Gate ebenfalls versucht |
 | `mimo-v2.5:free` | MiMo-Familie |
 | `mimo-v2.6-flash:free` | das schnellste der vier |
 
@@ -106,7 +106,7 @@ print(client.chat.completions.create(
 npm start            # Menü → "Mint keys" → wie viele → fertig
 ```
 
-`npm start` öffnet den Launcher, **1) Mint keys** fragt nach einer Anzahl und nichts weiter, dann
+`npm start` öffnet den Launcher, **1) Mint keys** fragt nach einer Anzahl und sonst nichts, dann
 erstellt die CLI ein Konto pro Schlüssel, verifiziert jedes mit einem Live-Chat-Aufruf und schreibt die überlebenden
 in `keys.txt`.
 
@@ -126,19 +126,20 @@ npm start            # Menü → 1) Mint keys → wie viele → fertig
 
 **Das Mailtrap-Token ist der einzige Einrichtungsschritt.** Token Harbor
 akzeptiert eine Mail-Domain, die wie ein echter Inbound-Mail-Host aussieht, und antwortet öffentlichen Wegwerf-Domains mit „complete the human
-check" (für diese rendert es nicht einmal das Widget), daher braucht die CLI eine Mailbox, die sie lesen kann. Die kostenlose Stufe reicht: Erstelle ein Konto bei
-[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, schreibe dann diesen Wert in
-`mailtrap.txt` neben `package.json` (eine Zeile), oder exportiere `MAILTRAP_TOKEN`. Der Launcher
+check" (für diese rendert es nicht einmal das Widget), daher
+braucht die CLI eine Mailbox, die sie lesen kann. Der kostenlose Tarif reicht: Erstelle ein Konto bei
+[mailtrap.io](https://mailtrap.io) → **Settings → API Tokens**, schreibe diesen Wert dann in
+`mailtrap.txt` neben `package.json` (eine Zeile) oder exportiere `MAILTRAP_TOKEN`. Der Launcher
 prüft es und sagt dir, wenn es fehlt — er fragt nie nach dem Wert selbst.
 
 Ohne das Token versucht die CLI trotzdem zuerst die öffentlichen Mail-Schienen, und jedes Konto bleibt an
-der Human-Check-Mauer des Panels stehen — deshalb ist die Datei erforderlich, nicht optional.
+der Human-Check-Mauer des Panels hängen — deshalb ist die Datei erforderlich, nicht optional.
 
 ## ✅ Verifiziert funktionierend — jeder Schlüssel wird getestet
 
 Ein Schlüssel wird nur dann in `keys.txt` geschrieben, wenn zum Zeitpunkt des Mintings:
 
-- ein Live-`chat-200` auf einem `:free`-Modell, und
+- ein Live-`chat-200` auf einem `:free`-Modell erfolgt ist und
 - **zwei verschiedene Prompts** mit 200 und nicht-leerem sowie **unterschiedlichem** Inhalt antworten.
 
 Ende-zu-Ende gemessen (`node src/cli.js --auto --count 1 --pool proxies.txt`):
@@ -156,23 +157,23 @@ done
 
 Jederzeit erneut prüfen mit `npm start` → **2) Verify keys** (`node src/cli.js --verify`); tote
 Schlüssel wandern nach `keys-dead.txt`, ein Schlüssel, dessen Live-Gate nicht abgeschlossen werden konnte (z. B. weil das Netzwerk ein
-Ratenlimit erreicht hat), landet in `keys-unverified.txt`, damit das Konto nie verloren geht.
+Ratenlimit erreicht hat), landet in `keys-unverified.txt`, sodass das Konto nie verloren geht.
 
-## 🧭 So funktioniert es
+## 🧭 Funktionsweise
 
-1. **Mailbox** — ein frisches Postfach pro Konto auf deinem Mailtrap-Konto (`mailtrap.txt`); öffentliche
+1. **Mailbox** — ein frisches Postfach pro Konto in deinem Mailtrap-Konto (`mailtrap.txt`); öffentliche
    mail.tm / mail.gw sind die Fallback-Schienen.
 2. **Registrierung** — die Next.js-Server-Action-IDs (`next-action`, `$ACTION_KEY`,
-   `x-deployment-id`) werden bei jedem Lauf aus der Live-Seite gelesen, sodass ein Panel-Redeploy die
-   CLI nicht bricht; der Geräte-Fingerprint und die Zeitzone reisen mit der Anfrage, und die Zeitzone wird
+   `x-deployment-id`) werden bei jedem Lauf aus der Live-Seite gelesen, sodass ein Redeploy des Panels die
+   CLI nicht bricht; der Geräte-Fingerprint und die Zeitzone gehen mit der Anfrage mit, und die Zeitzone wird
    vom Exit aus gemessen, nicht von deinem Rechner.
 3. **Human Check** — wenn das Panel das Widget rendert, wird die Registrierung in einem echten Chrome
-   wiederholt (`src/solver.js`, `puppeteer-core` + das bereits installierte Chrome; `--enable-automation` wird
+   erneut abgespielt (`src/solver.js`, `puppeteer-core` + das bereits installierte Chrome; `--enable-automation` wird
    absichtlich unterdrückt), das Kontrollkästchen wird mit der Maus angeklickt, und die Session-
    Cookies dieses Browsers werden an die CLI zurückgegeben.
 4. **E-Mail-Verifizierung** — der Link aus der Mailbox wird geöffnet; das Token wird serverseitig
    verbraucht und antwortet mit `307 → /dashboard?verify=success`.
-5. **Zustimmung zu kostenlosen Modellen** — `POST /api/me/privacy` mit dem Zustimmungstext, den das Dashboard anzeigt
+5. **Einwilligung zu kostenlosen Modellen** — `POST /api/me/privacy` mit dem Einwilligungstext, den das Dashboard anzeigt
    (`src/consent-text.txt`), `screen: "consent_modal"`, `path: "/dashboard"`.
 6. **Schlüssel + Live-Gate** — `POST /api/keys`, dann müssen zwei verschiedene Prompts beide mit 200 und
    unterschiedlichem Inhalt antworten, bevor der Schlüssel geschrieben wird.
@@ -192,19 +193,19 @@ node src/cli.js --help
 | --- | --- |
 | `--count <n>` | zu erstellende Konten (und Schlüssel), Standard 1 |
 | `--pool <file>` | Proxy-Liste, ein Exit pro Zeile (`http://host:port`, `socks5://user:pass@host:port`, `host:port`); Inline-`#`-Kommentare sind in Ordnung |
-| `--headless` | den Fallback-Browser headless ausführen (Standard: Off-Screen-Fenster, was das Captcha erwartet) |
-| `--screen` | den Pool gegen das Panel testen und live/tot pro Exit ausgeben |
+| `--headless` | den Fallback-Browser headless ausführen (Standard: aus, Off-Screen-Fenster, was das Captcha erwartet) |
+| `--screen` | den Pool gegen das Panel testen und pro Exit live/tot ausgeben |
 | `--verify` | `keys.txt` live verifizieren; tote Schlüssel werden nach `keys-dead.txt` geschrieben |
 | `--models` | die IDs der kostenlosen Modelle ausgeben |
-| `--strict-proxy` | niemals eine direkte Anfrage senden: auch das Live-Gate muss über den Pool laufen (die Umgebungsvariable `TOKENHARBOR_STRICT=1` bewirkt dasselbe) |
+| `--strict-proxy` | niemals eine direkte Anfrage senden: Auch das Live-Gate muss über den Pool laufen (Env `TOKENHARBOR_STRICT=1` bewirkt dasselbe) |
 
-Ein sterbender Exit kostet nie ein Konto: Registrierung und Live-Gate versuchen es beide erneut auf anderen Pool-Zeilen,
-und bei einem `429` wird die vom Panel genannte Zeit abgewartet.
+Ein sterbender Exit kostet nie ein Konto: Registrierung und Live-Gate versuchen es beide erneut über andere Pool-Zeilen,
+und bei einem Ratenlimit (ein `429` oder ein `200`, dessen Body `rate_limit_exceeded` enthält) wird die vom Panel genannte Zeit abgewartet.
 
 ## 🛰️ Hinter einem Proxy
 
-Die CLI läuft standardmäßig **direkt**. Lege einen Exit pro Zeile in `proxies.txt` ab (der Launcher greift
-automatisch darauf zu) oder übergib `--pool`:
+Die CLI läuft standardmäßig **direkt**. Lege einen Exit pro Zeile in `proxies.txt` ab (der Launcher nimmt
+sie automatisch auf) oder übergib `--pool`:
 
 ```text
 http://127.0.0.1:8080
@@ -213,7 +214,7 @@ socks5://user:pass@10.0.0.5:1080
 ```
 
 Optional — bei größerem Umfang empfohlen: Das Panel begrenzt Registrierungen **pro Netzwerk**, daher hält ein frischer Exit
-pro Konto einen größeren Lauf gesund. E-Mails werden direkt von deinem Mailtrap-Konto gelesen (ein
+pro Konto einen größeren Lauf gesund. E-Mails werden direkt aus deinem Mailtrap-Konto gelesen (ein
 Mail-Anbieter ist nicht das Panel), sodass ein langsamer Exit den Mailbox-Schritt nicht brechen kann.
 
 ## 📄 Dateien
@@ -229,27 +230,27 @@ Mail-Anbieter ist nicht das Panel), sodass ein langsamer Exit den Mailbox-Schrit
 | `src/cli.js` | die CLI für Mint / Verify / Screen |
 | `src/launcher.js` | das Menü (`npm start`) |
 | `src/solver.js` | die Browser-Hälfte für das Turnstile-Widget |
-| `src/consent-text.txt` | der Zustimmungstext, den das Panel validiert |
-| `src/connect-9router.js`, `src/connect-omniroute.js` | Router-Connectoren |
+| `src/consent-text.txt` | der Einwilligungstext, den das Panel validiert |
+| `src/connect-9router.js`, `src/connect-omniroute.js` | Router-Konnektoren |
 
-## 🔌 Verbindung mit 9Router
+## 🔌 Mit 9Router verbinden
 
 ```bash
 node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
 Registriert einen `openai-compatible`-Provider-Knoten (`tokenharbor`, Basis-URL
-`https://tokenharbor.ai/v1`) und eine Verbindung pro Schlüssel in `keys.txt`, sodass 9Router den Lastausgleich
-über deine Schlüssel vornimmt. Idempotent: Ein vorhandener Knoten oder eine vorhandene Verbindung wird wiederverwendet, und die Nummerierung wird
-ab dem höchsten bereits vorhandenen `tokenharbor-0NN` fortgesetzt.
+`https://tokenharbor.ai/v1`) und eine Verbindung pro Schlüssel in `keys.txt`, sodass 9Router das Load-Balancing
+über deine Schlüssel durchführt. Idempotent: Ein vorhandener Knoten oder eine vorhandene Verbindung wird wiederverwendet, und die Nummerierung wird
+ab der höchsten bereits vorhandenen `tokenharbor-0NN` fortgesetzt.
 
-## 🔌 Verbindung mit OmniRoute
+## 🔌 Mit OmniRoute verbinden
 
 ```bash
 node src/connect-omniroute.js --base http://localhost:20128 --password 123456
 ```
 
-Gleiche Form für OmniRoute (Provider-Knoten + eine Verbindung pro Schlüssel). Der Launcher bietet beide als
+Gleiche Form für OmniRoute (Provider-Knoten + eine Verbindung pro Schlüssel). Der Launcher bietet beides als
 Menüpunkte **6** und **7** an, und `npm run 9router` / `npm run omniroute` tun dasselbe.
 
 ## 🔑 Was ein Schlüssel dir bringt
