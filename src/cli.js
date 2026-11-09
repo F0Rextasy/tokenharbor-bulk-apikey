@@ -499,59 +499,67 @@ async function mintOne({ px, pool, index, total, log }) {
   const key = (r.text.match(/thk_live_[A-Za-z0-9_-]{20,}/) || [])[0];
   if (!key) throw new Error(`key ${r.status} ${r.text.slice(0, 120)}`);
   // Live proof: two different prompts must both answer 200 with different content.
+  // The key exists from here on, so *any* failure inside the gate keeps it in
+  // keys-unverified.txt instead of throwing the account away.
   const answers = [];
-  for (const q of ['Reply with exactly: PONG', 'What is 17+25? Reply with the number only.']) {
-    let ok = false;
-    for (const model of [FREE_MODEL, FREE_FALLBACK]) {
-      // The key already exists from here on, so the live gate never throws the
-      // account away: a dead exit is retried on other lines, and a 429 names its
-      // own wait time. The last attempt runs direct (a read-only chat call).
-      let c = null;
-      for (let t = 0; t < 5 && !c; t++) {
-        try {
-          c = await req(`${BASE}/v1/chat/completions`, {
-            px: t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
-            method: 'POST',
-            headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-            body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
-            timeoutMs: 120000,
-          });
-        } catch (e) {
-          if (t === 4) throw e;
-          continue;
-        }
-        if (c.status === 429) {
-          const wait = Math.max(20, Number((c.text.match(/in (\d+) s/) || [])[1] || 20));
-          log(`   rate limited — waiting ${wait}s`);
-          await sleep(wait * 1000);
-          c = null;
-        }
-      }
-      if (!c) {
-        fs.appendFileSync('keys-unverified.txt', key + ' ' + mail.address + '\n');
-        throw new Error('chat gate: still rate limited — key saved to keys-unverified.txt');
-      }
-      const j = (() => {
-        try {
-          return JSON.parse(c.text);
-        } catch (e) {
-          return null;
-        }
-      })();
-      const text = j && j.choices && j.choices[0] && j.choices[0].message ? String(j.choices[0].message.content || '') : '';
-      if (c.status === 200 && text.trim()) {
-        answers.push(text.trim());
-        ok = true;
-        break;
-      }
-      steps.lastChat = `${c.status} ${c.text.slice(0, 90)}`;
+  const keepKey = () => {
+    try {
+      fs.appendFileSync('keys-unverified.txt', `${key} ${mail.address}\n`);
+    } catch (e) {
+      /* the log line below still names the last four characters */
     }
-    if (!ok) {
-      fs.appendFileSync('keys-unverified.txt', key + ' ' + mail.address + '\n');
-      throw new Error(`chat-200 failed: ${steps.lastChat} — key saved to keys-unverified.txt`);
+  };
+  try {
+    for (const q of ['Reply with exactly: PONG', 'What is 17+25? Reply with the number only.']) {
+      let ok = false;
+      for (const model of [FREE_MODEL, FREE_FALLBACK]) {
+        let c = null;
+        for (let t = 0; t < 6 && !c; t++) {
+          try {
+            c = await req(`${BASE}/v1/chat/completions`, {
+              px: t < 2 && pool && pool.length ? pool[Math.floor(Math.random() * pool.length)] : null,
+              method: 'POST',
+              headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+              body: JSON.stringify({ model, messages: [{ role: 'user', content: q }], max_tokens: 64 }),
+              timeoutMs: 120000,
+            });
+          } catch (e) {
+            if (t === 5) throw e;
+            continue;
+          }
+          if (c.status === 429) {
+            const wait = Math.max(25, Number((c.text.match(/in (\d+) s/) || [])[1] || 25));
+            log(`   rate limited — waiting ${wait}s`);
+            await sleep(wait * 1000);
+            c = null;
+          }
+        }
+        if (!c) throw new Error('chat gate: still rate limited');
+        const j = (() => {
+          try {
+            return JSON.parse(c.text);
+          } catch (e) {
+            return null;
+          }
+        })();
+        const text = j && j.choices && j.choices[0] && j.choices[0].message ? String(j.choices[0].message.content || '') : '';
+        if (c.status === 200 && text.trim()) {
+          answers.push(text.trim());
+          ok = true;
+          break;
+        }
+        steps.lastChat = `${c.status} ${c.text.slice(0, 90)}`;
+      }
+      if (!ok) throw new Error(`chat-200 failed: ${steps.lastChat}`);
     }
+  } catch (e) {
+    keepKey();
+    throw new Error(`${e.message} — key …${key.slice(-4)} saved to keys-unverified.txt`);
   }
-  if (answers[0] === answers[1]) throw new Error('chat answered the same text to two different prompts');
+  if (answers[0] === answers[1]) {
+    keepKey();
+    throw new Error('chat answered the same text to two different prompts — key saved to keys-unverified.txt');
+  }
   return { key, email: mail.address, steps };
 }
 
