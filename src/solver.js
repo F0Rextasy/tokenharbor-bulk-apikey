@@ -142,6 +142,26 @@ async function signupInBrowser({ px = null, email, password, log = () => {}, hea
       })
       .catch(() => {});
     await sleep(400);
+    // The signup panel gates its submit button behind a required consent box
+    // ("I confirm that I am at least 18 years old."). It is a plain, unlabeled
+    // <input type="checkbox"> that lives OUTSIDE the <form> in its own <label>,
+    // so it has to be found by label text and clicked before anything is typed.
+    const agreed = await page
+      .evaluate(() => {
+        const boxes = [...document.querySelectorAll('input[type="checkbox"]')].filter(
+          (b) => !b.disabled && b.getBoundingClientRect().width > 0
+        );
+        const textOf = (b) =>
+          (b.labels && b.labels[0] && b.labels[0].innerText) || (b.parentElement && b.parentElement.innerText) || '';
+        const pick =
+          boxes.find((b) => /18|age|adult|years old/i.test(textOf(b))) || boxes[0];
+        if (!pick) return false;
+        if (!pick.checked) pick.click();
+        return pick.checked;
+      })
+      .catch(() => false);
+    log && log(`   age/terms consent ${agreed ? 'checked' : 'not found — continuing'}`);
+    await sleep(300);
     await page.click('input[name="email"]').catch(() => {});
     await page.type('input[name="email"]', email, { delay: 40 + Math.random() * 60 }).catch(() => {});
     await page.click('input[name="password"]').catch(() => {});
